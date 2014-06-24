@@ -1,0 +1,1 @@
+demo working with the Oculus Rift, and a simple object. Hopefully Leap Motion interation is soon implemented.
