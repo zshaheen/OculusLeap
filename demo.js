@@ -2,6 +2,7 @@
 var renderer, camera, scene, element;
 var ambient, point;
 var aspectRatio;
+var stats;
 
 //Oculus Bridge variables 
 var riftCam, oculusBridge;
@@ -58,6 +59,14 @@ function init() {
 	point.position.set( -250, 250, 150 );
 
 	scene.add(point);
+	
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.left = '0px';
+	stats.domElement.style.top = '0px';
+	document.body.appendChild( stats.domElement );
+
+
 }
 
 function initOculus() {
@@ -204,6 +213,7 @@ function leapLoop() {
 	}*/
 	
 	Leap.loop(function(frame) {
+	stats.update();
 	render();
 	leapController.on('deviceDisconnected', function() {
 		$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
