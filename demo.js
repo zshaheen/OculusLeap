@@ -3,21 +3,34 @@ var renderer, camera, scene, element;
 var ambient, point;
 var aspectRatio;
 
-//Oculus Bridge variables
+//Oculus Bridge variables 
 var riftCam, oculusBridge;
 var bodyAngle, bodyAxis, viewAngle;
 
-//Leap Objects
+//Leap variables
 var earth, leftObj;
 var leapController;
 var rightHand, leftHand;
-var errorMoreHands = false;
+var firstValidFrame = null;
+var cameraRadius = 290;
+var rotateY = 90, rotateX = 0, curY = 0;
+var rotateY_L = 90, rotateX_L = 0, curY_L = 0;
 
+
+//Error Dialog variables
+var dialogMinHeight = 200;
+var dialogMinWidth = 500;
 
 
 function init() {
 	window.addEventListener('resize', onResize, false);
 	
+	//Initialize the errors
+	//NOTE: .dialog({ autoOpen: false }); must be the first command
+		$( "#twoHandsError" ).dialog({ autoOpen: false });
+		$( "#twoHandsError" ).dialog({ minHeight: dialogMinHeight });
+		$( "#twoHandsError" ).dialog({ minWidth: dialogMinWidth });
+		
 	scene = new THREE.Scene();
 	
 	aspectRatio = window.innerWidth / window.innerHeight;
@@ -122,6 +135,7 @@ function render() {
 	return true;*/
 }
 
+/*
 function crashSecurity(e){
 	oculusBridge.disconnect();
 	document.getElementById("viewport").style.display = "none";
@@ -134,6 +148,7 @@ function crashOther(e){
 	document.getElementById("generic_error").style.display = "block";
 	document.getElementById("exception_message").innerHTML = e.message;
 }
+*/
 
 function draw() {
 	var geometry = new THREE.SphereGeometry(50, 10, 10);
@@ -178,10 +193,7 @@ function initLeap() {
 	$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
 }
 
-var firstValidFrame = null
-var cameraRadius = 290
-var rotateY = 90, rotateX = 0, curY = 0
-var rotateY_L = 90, rotateX_L = 0, curY_L = 0
+
 
 function leapLoop() {
 
@@ -198,16 +210,9 @@ function leapLoop() {
 	});
 	
 	//Leap is connected, remove the error
-	$("#errorLeapConnect").remove();
+	$( "#twoHandsError" ).dialog( "close" );
 	
 	if (frame.valid && frame.hands.length == 2) {
-		
-		//set the error boolean to false so it is able to launch the error message again if needed
-		errorMoreHands = false;
-		
-		//remove the error messages
-		$("#errorMoreHands").remove();
-		
 		if (!firstValidFrame)	
 			firstValidFrame = frame
 		 
@@ -223,12 +228,12 @@ function leapLoop() {
 		  
 		  
 		//var t = firstValidFrame.translation(frame)
-		var t = rightHand.translation(frame)
-		var t_L = leftHand.translation(frame)
+		var t = rightHand.translation(frame);
+		var t_L = leftHand.translation(frame);
 		  
 		//limit y-axis between 0 and 360 degrees
-		curY = map(t[1], -300, 300, 0, 720)
-		curY_L = map(t_L[1], -300, 300, 0, 720)
+		curY = map(t[1], -300, 300, 0, 360);
+		curY_L = map(t_L[1], -300, 300, 0, 360);
 		  
 
 		//assign rotation coordinates
@@ -255,10 +260,7 @@ function leapLoop() {
 	
 	else {
 		firstValidFrame = null
-		if(frame.hands.length < 2 &&  errorMoreHands == false) {
-			$("#title").append('<div id="errorMoreHands"><center><font color="red"> Error: Two hands are not visible to the Leap Motion controller </font></center></div>');
-			errorMoreHands = true;
-		}
+		$( "#twoHandsError" ).dialog("open");
 	}
 
 	//camera.updateProjectionMatrix();

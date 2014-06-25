@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-	<div id='title'><center><b>Leap Motion and Oculus Rift Demo</b></center> <div>
+	<!-- <div id='title'><center><b>Leap Motion and Oculus Rift Demo</b></center> <div> -->
 	<head>
 		<title>Oculus Rift and Leap Motion Demo</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	</head>
 
+	
+	
 	<body>
 		<div id="viewport"></div>
 
-		<div id="security_error">
+		<!-- <div id="security_error">
 		<p>This file must be served via HTTP to support the use of textures.</p>
 		<p>Please host this content via a web server of some kind and try again.</p>
 		</div>
 		<div id="generic_error">
 		<p>Oh dang, something went wrong while trying to render the scene.</p>
 		<p>Exception: <span id="exception_message"></span></p>
-		</div>
+		</div> -->
 
 		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+		<script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
 		
 		<script src="lib/three.min.js"></script>
 		
@@ -28,7 +32,18 @@
 		
 		<script src="//js.leapmotion.com/leap-0.6.1.min.js"></script>
 		
+		<!-- Errors -->
+		<div id="twoHandsError" title="Error">
+		  <p>Two hands are not visible to the Leap Motion controller</p>
+		</div>
 		
+		<div id="leapError" title="Error">
+		  <p>Connect a Leap Motion Controller</p>
+		</div>
+		
+		<div id="oculusError" title="Error">
+		  <p>Connect an Oculus Rift</p>
+		</div>
 		
 		<script src="demo.js"></script>
 	</body>
