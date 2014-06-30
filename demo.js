@@ -9,9 +9,24 @@ var riftCam, oculusBridge;
 var bodyAngle, bodyAxis, viewAngle;
 var quat, quatCam, xzVector;
 
-//Leap variables
+//molecules variables
 var rightObj, leftObj;
 var rightObjLoaded, leftObjLoaded;
+var hydrogenMat = new THREE.MeshLambertMaterial({
+	color: 0xFFFFFF // white
+});
+
+var oxygenMat = new THREE.MeshLambertMaterial({
+	color: 0x0000FF // blue
+});
+
+var water_oxygenMat = new THREE.MeshLambertMaterial( {
+	color: 0xDD3333 // red
+});
+
+	
+
+//Leap Variables
 var leapController;
 var rightHand, leftHand;
 var rotWorldMatrix;
@@ -30,6 +45,7 @@ window.onload = function() {
 	draw();
 	//leapLoop();
 }
+
 
 function init() {
 	window.addEventListener('resize', onResize, false);
@@ -76,6 +92,7 @@ function init() {
 
 }
 
+
 function initOculus() {
 	bodyAngle = 0;
 	bodyAxis = new THREE.Vector3(0, 1, 0);
@@ -93,15 +110,18 @@ function initOculus() {
 	onResize();
 }
 
+
 function onResize() {
     riftCam.setSize(window.innerWidth, window.innerHeight);
 }
+
 
 function bridgeConfigUpdated(config){
 	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
 	console.log("Oculus config updated.");
 	riftCam.setHMD(config);      
 }
+
 
 function bridgeOrientationUpdated(quatValues) {
 	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
@@ -153,6 +173,7 @@ function render() {
 	return true;
 }
 
+
 /*
 function crashSecurity(e){
 	oculusBridge.disconnect();
@@ -179,6 +200,7 @@ function rotateAroundWorldAxis(object, axis, radians) {
 	object.rotation.setFromRotationMatrix(object.matrix);
 }
 
+
 function avgPos(data, numberOfAtoms) {
 	var position = new THREE.Vector3;
 	var sumX=0, sumY=0, sumZ=0;
@@ -194,10 +216,11 @@ function avgPos(data, numberOfAtoms) {
 	return position;
 }
 
+
 function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	//THREE.SphereGeometry(radius, wSegments, hSegments)
 	var geometry = new THREE.SphereGeometry(1, 7, 7);
-	var mat = new THREE.MeshLambertMaterial( { color: 'blue' } );
+	var defaultMat = new THREE.MeshLambertMaterial( { color: 'blue' } );
 	
 	var meshArr = [];
 	/*for (var i = 0; i < numberOfAtoms; i++) {
@@ -206,7 +229,23 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	
 	for (var i = 0; i < numberOfAtoms; i++) {
 		//var mesh = new THREE.Mesh(geometry, mat);
-		meshArr.push(new THREE.Mesh(geometry, mat));
+		switch(atoms[i][0]) {
+			case "H":
+				meshArr.push(new THREE.Mesh(geometry, hydrogenMat));
+				break;
+			case "HO":
+				meshArr.push(new THREE.Mesh(geometry, oxygenMat ));
+				break;
+			case "O":
+				meshArr.push(new THREE.Mesh(geometry, water_oxygenMat ));
+				break;
+			default:
+				meshArr.push(new THREE.Mesh(geometry, defaultMat ));
+				break;
+		}
+		
+		
+		//meshArr.push(new THREE.Mesh(geometry, mat));
 		//change the postion of the atoms relative to the origin
 		meshArr[i].position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 		molObj.add(meshArr[i]);
@@ -216,6 +255,7 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	
 }
 
+
 function getData1(filename1, filename2) {
 	var get1 = $.get(filename1, function(data) {
 		// split the data by line
@@ -223,6 +263,7 @@ function getData1(filename1, filename2) {
 	});
 	get1.success(getData2(filename2));
 }
+
 
 function getData2(filename) {
 	var get2 = $.get(filename, function(data) {
@@ -243,6 +284,7 @@ function getData2(filename) {
 		leapLoop();
 	});
 }
+
 
 function parseDataToAtoms(data, objectLR) {
 	var numberOfAtoms = parseInt(data[1]);
@@ -273,6 +315,7 @@ function parseDataToAtoms(data, objectLR) {
 	drawMolecule(atoms, numberOfAtoms, atomCenter, objectLR);
 	
 }
+
 
 function draw() {
 	
@@ -344,14 +387,60 @@ function leapLoop() {
 			  
 			var t = rightHand.palmVelocity;
 			var t_L = leftHand.palmVelocity;
+			
+			/*if (leftHand.pointables.length==3)
+				console.log("shit");
+			if(rightHand.pointables.length == 3 && rightObj.position.z < 25)
+				rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)),-t[2]/5000);
+			else {
+				rotateAroundWorldAxis(rightObj, yAxis,  (t[0]/50)* Math.PI/180);
+				rotateAroundWorldAxis(rightObj, xAxis,  (-t[1]/50)* Math.PI/180);
+			}*/
+				
+			
+			switch(rightHand.pointables.length) {
+				case 3:
+					if(rightObj.position.z < 25)
+						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)),-t[2]/5000);
+					break;
+				default:
+					rotateAroundWorldAxis(rightObj, yAxis,  (t[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightObj, xAxis,  (-t[1]/50)* Math.PI/180);
+					break;
+			}
+			
+			switch(leftHand.pointables.length) {
+				case 3:
+					if(leftObj.position.z < 25)
+						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)),-t_L[2]/5000);
+					break;
+				default:
+					rotateAroundWorldAxis(leftObj, yAxis,  (t_L[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftObj, xAxis,  (-t_L[1]/50)* Math.PI/180);
+					break;
+			}
+			
+			/*
 			rotateAroundWorldAxis(rightObj, yAxis,  (t[0]/50)* Math.PI/180);
 			rotateAroundWorldAxis(rightObj, xAxis,  (-t[1]/50)* Math.PI/180);
 			rotateAroundWorldAxis(leftObj, yAxis,  (t_L[0]/50)* Math.PI/180);
 			rotateAroundWorldAxis(leftObj, xAxis,  (-t_L[1]/50)* Math.PI/180);
+			
+			if(leftObj.position.z < 25)
+				leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)),-t_L[2]/5000);
+			*/
+			
+			//else
+				//leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,30)), -t_L[2]/1000);
+			//console.log(t[2]);
+		
+			
 		}
 		
 		else {
-			$( "#twoHandsError" ).dialog("open");
+			//No performance imporvemnt seen
+			//if(!$( "#twoHandsError" ).dialog("isOpen")) 
+				$( "#twoHandsError" ).dialog("open");
 		}
 	//camera.updateProjectionMatrix();
 	//camera.lookAt(scene.position);
