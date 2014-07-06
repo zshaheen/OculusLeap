@@ -12,6 +12,7 @@ var quat, quatCam, xzVector;
 //molecules variables
 var rightObj, leftObj;
 var rightObjLoaded, leftObjLoaded;
+
 var hydrogenMat = new THREE.MeshLambertMaterial({
 	color: 0xFFFFFF // white
 });
@@ -20,10 +21,16 @@ var oxygenMat = new THREE.MeshLambertMaterial({
 	color: 0x0000FF // blue
 });
 
-var water_oxygenMat = new THREE.MeshLambertMaterial( {
+var water_oxygenMat = new THREE.MeshLambertMaterial({
 	color: 0xDD3333 // red
 });
 
+var carbon_cylinderMat = new THREE.MeshLambertMaterial({
+	color: 0x00FF00 // green
+});
+var defaultMat = new THREE.MeshLambertMaterial( { 
+	color: 0xFF33CC //bright pink
+});
 	
 
 //Leap Variables
@@ -220,39 +227,92 @@ function avgPos(data, numberOfAtoms) {
 function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	//THREE.SphereGeometry(radius, wSegments, hSegments)
 	var geometry = new THREE.SphereGeometry(1, 7, 7);
-	var defaultMat = new THREE.MeshLambertMaterial( { color: 'blue' } );
+	
 	
 	var meshArr = [];
-	/*for (var i = 0; i < numberOfAtoms; i++) {
-		meshArr.push(new THREE.Mesh(geometry, mat));
-	}*/
+	
+	var cylArray = [];
+	var tempMesh;
 	
 	for (var i = 0; i < numberOfAtoms; i++) {
 		//var mesh = new THREE.Mesh(geometry, mat);
 		switch(atoms[i][0]) {
 			case "H":
-				meshArr.push(new THREE.Mesh(geometry, hydrogenMat));
+				tempMesh = new THREE.Mesh(geometry, hydrogenMat);
+				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				molObj.add(tempMesh);
 				break;
 			case "HO":
-				meshArr.push(new THREE.Mesh(geometry, oxygenMat ));
+				tempMesh = new THREE.Mesh(geometry, oxygenMat );
+				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				molObj.add(tempMesh);
 				break;
 			case "O":
-				meshArr.push(new THREE.Mesh(geometry, water_oxygenMat ));
+				tempMesh = new THREE.Mesh(geometry, water_oxygenMat );
+				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				molObj.add(tempMesh);
+				break;
+			case "C":
+				cylArray.push(i)
 				break;
 			default:
-				meshArr.push(new THREE.Mesh(geometry, defaultMat ));
+				tempMesh = new THREE.Mesh(geometry, defaultMat );
+				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				molObj.add(tempMesh);
 				break;
 		}
 		
-		
-		//meshArr.push(new THREE.Mesh(geometry, mat));
 		//change the postion of the atoms relative to the origin
-		meshArr[i].position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
-		molObj.add(meshArr[i]);
+		//meshArr[i].position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+		//molObj.add(meshArr[i]);
+	}
+	//Now add in the carbon chains
+	
+	for(var i=0; i< cylArray.length-1; i++) { 
+	
+		//get a THREE.Vector3 based on the values in cylArray
+		if(cylArray[i] == cylArray[i+1]-1) {
+			var pos1 = new THREE.Vector3(atoms[cylArray[i]][1]-atomCenter.x, atoms[cylArray[i]][2]-atomCenter.y, atoms[cylArray[i]][3]-atomCenter.z);
+			var pos2 = new THREE.Vector3(atoms[cylArray[i+1]][1]-atomCenter.x, atoms[cylArray[i+1]][2]-atomCenter.y, atoms[cylArray[i+1]][3]-atomCenter.z);
+			molObj.add(cylinderBetweenPoints(pos1, pos2));
+		}
 	}
 	
 	scene.add(molObj);
+}
+
+
+function cylinderBetweenPoints(vstart, vend) {
+
+	var HALF_PI = Math.PI * .5;
+    var distance = vstart.distanceTo(vend);
+    var position  = vend.clone().add(vstart).divideScalar(2);
+
+	//avg_cylinder_len += distance;
+
+    var cylinder = new THREE.CylinderGeometry(0.1, 0.1, distance, 8, 1, false);
+
+
+
+    var orientation = new THREE.Matrix4();		//a new orientation matrix to offset pivot
+    var offsetRotation = new THREE.Matrix4();	//a matrix to fix pivot rotation
+    var offsetPosition = new THREE.Matrix4();	//a matrix to fix pivot position
+    orientation.lookAt(vstart,vend,new THREE.Vector3(0,1,0));	//look at destination
+    offsetRotation.makeRotationX(HALF_PI);		//rotate 90 degs on X
+    orientation.multiply(offsetRotation);		//combine orientation with rotation transformations
+
+
+	var mesh = new THREE.Mesh(cylinder,carbon_cylinderMat);
+
+	// rotate and move the cylinder in position
+	mesh.applyMatrix(orientation);
+    mesh.position = position;
 	
+
+	// add cylinder to the cylinder array and return the mesh
+	//cylinder_arr.push(mesh);
+
+    return mesh;
 }
 
 
@@ -324,7 +384,7 @@ function draw() {
 	var objRawData1, objRawData2;
 	leftObj = new THREE.Object3D();
 	rightObj = new THREE.Object3D();
-	var file1="data/4", file2="data/2";
+	var file1="data/0x1/5155", file2="data/2";
 	getData1(file1, file2);
 	
 	
@@ -363,6 +423,7 @@ function initLeap() {
 
 
 function leapLoop() {
+	var t, t_L;
 	
 	Leap.loop(function(frame) {
 		stats.update();
@@ -385,8 +446,8 @@ function leapLoop() {
 				leftHand = frame.hands[1];
 			}
 			  
-			var t = rightHand.palmVelocity;
-			var t_L = leftHand.palmVelocity;
+			t = rightHand.palmVelocity;
+			t_L = leftHand.palmVelocity;
 			
 			/*if (leftHand.pointables.length==3)
 				console.log("shit");
@@ -440,7 +501,7 @@ function leapLoop() {
 		else {
 			//No performance imporvemnt seen
 			//if(!$( "#twoHandsError" ).dialog("isOpen")) 
-				$( "#twoHandsError" ).dialog("open");
+				//$( "#twoHandsError" ).dialog("open");
 		}
 	//camera.updateProjectionMatrix();
 	//camera.lookAt(scene.position);
