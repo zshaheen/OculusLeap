@@ -12,6 +12,7 @@ var quat, quatCam, xzVector;
 //molecules variables
 var rightObj, leftObj;
 var rightObjLoaded, leftObjLoaded;
+var rightTransObj, leftTransObj;
 
 var hydrogenMat = new THREE.MeshLambertMaterial({
 	color: 0xFFFFFF // white
@@ -292,8 +293,6 @@ function cylinderBetweenPoints(vstart, vend) {
 
     var cylinder = new THREE.CylinderGeometry(0.1, 0.1, distance, 8, 1, false);
 
-
-
     var orientation = new THREE.Matrix4();		//a new orientation matrix to offset pivot
     var offsetRotation = new THREE.Matrix4();	//a matrix to fix pivot rotation
     var offsetPosition = new THREE.Matrix4();	//a matrix to fix pivot position
@@ -301,17 +300,14 @@ function cylinderBetweenPoints(vstart, vend) {
     offsetRotation.makeRotationX(HALF_PI);		//rotate 90 degs on X
     orientation.multiply(offsetRotation);		//combine orientation with rotation transformations
 
-
 	var mesh = new THREE.Mesh(cylinder,carbon_cylinderMat);
 
 	// rotate and move the cylinder in position
 	mesh.applyMatrix(orientation);
     mesh.position = position;
 	
-
 	// add cylinder to the cylinder array and return the mesh
 	//cylinder_arr.push(mesh);
-
     return mesh;
 }
 
@@ -335,8 +331,8 @@ function getData2(filename) {
 		parseDataToAtoms(objRawData1, leftObj);
 		parseDataToAtoms(objRawData2, rightObj);
 		
-		leftObj.position = new THREE.Vector3(-10,0,0);
-		rightObj.position = new THREE.Vector3(10,0,0);
+		leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
+		rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
 		
 		//camera.lookAt( scene.position );
 		//camera.position.set(0,0,30 );
@@ -382,8 +378,15 @@ function draw() {
 	//starts the entire chain that draws all of the objects and instantiants ...
 	//them as leftObj and rightObj
 	var objRawData1, objRawData2;
+	
 	leftObj = new THREE.Object3D();
 	rightObj = new THREE.Object3D();
+	leftTransObj = new THREE.Object3D();
+	rightTransObj = new THREE.Object3D();
+	
+	leftTransObj.position = camera.position;
+	rightTransObj.position = camera.position;
+	
 	var file1="data/0x1/5155", file2="data/2";
 	getData1(file1, file2);
 	
@@ -424,10 +427,16 @@ function initLeap() {
 
 function leapLoop() {
 	var t, t_L;
+	scene.add(leftTransObj);
+	scene.add(rightTransObj);
+	
+	leftTransObj.add(leftObj);
+	rightTransObj.add(rightObj);
 	
 	Leap.loop(function(frame) {
-		stats.update();
+		//stats.update();
 		render();
+		stats.update();
 		leapController.on('deviceDisconnected', function() {
 			$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
 		});
@@ -460,6 +469,10 @@ function leapLoop() {
 				
 			
 			switch(rightHand.pointables.length) {
+				case 1:
+					rotateAroundWorldAxis(rightTransObj, yAxis,  (-t[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightTransObj, xAxis,  (t[1]/50)* Math.PI/180);
+					break;
 				case 3:
 					if(rightObj.position.z < 25)
 						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)),-t[2]/5000);
@@ -471,6 +484,10 @@ function leapLoop() {
 			}
 			
 			switch(leftHand.pointables.length) {
+				case 1:
+					rotateAroundWorldAxis(leftTransObj, yAxis,  (-t_L[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftTransObj, xAxis,  (t_L[1]/50)* Math.PI/180);
+					break;
 				case 3:
 					if(leftObj.position.z < 25)
 						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)),-t_L[2]/5000);
