@@ -372,7 +372,7 @@ function parseDataToAtoms(data, objectLR) {
 	
 }
 
-
+var plane;
 function draw() {
 	
 	//starts the entire chain that draws all of the objects and instantiants ...
@@ -387,6 +387,18 @@ function draw() {
 	leftTransObj.position = camera.position;
 	rightTransObj.position = camera.position;
 	
+	var geometry = new THREE.PlaneGeometry( 20, 10 );
+	var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+	plane = new THREE.Mesh( geometry, material );
+	//plane.position = new THREE.Vector3(-10,0,0);
+	
+	scene.add( plane );
+	//camera.add(plane);
+	plane.position.set(0,-7,-3);
+	camera.add(plane);
+	//plane.visble = false;
+	scene.add( camera );
+
 	var file1="data/0x1/5155", file2="data/2";
 	getData1(file1, file2);
 	
@@ -424,27 +436,52 @@ function initLeap() {
 	//$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
 }
 
+/*
+function notification(name, hide) {
+	//name is the name of the variable, is a string
+	//If hide is true, plane is hidden, false makes if visible
+	var zPos = 0;
+	if(name = "plane") {
+		zPos = plane.position.z;
+	}
+	
+	camera.traverse( function ( object ) {
+		if(object.z == zPos)
+			object.visible = hide; 
+	} );
+	
+}*/
 
 function leapLoop() {
-	var t, t_L;
+	
+	var vRight, vLeft;
 	scene.add(leftTransObj);
 	scene.add(rightTransObj);
 	
 	leftTransObj.add(leftObj);
 	rightTransObj.add(rightObj);
+	//Delete bottom if performance hit
+	onResize();
+	
 	
 	Leap.loop(function(frame) {
 		//stats.update();
 		render();
+		//onResize();
 		stats.update();
 		leapController.on('deviceDisconnected', function() {
 			$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
 		});
+		console.log(plane.position);
 		
 		//Leap is connected, remove the error
 		$( "#twoHandsError" ).dialog( "close" );
 		
 		if (frame.valid && frame.hands.length == 2) {
+		//camera.traverse( function ( object ) { object.visible = false; } );
+		if(plane.visible)
+			camera.remove(plane);
+		
 			if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
 				//hands[0] is to the left of hands[1]
 				rightHand = frame.hands[1];
@@ -455,74 +492,51 @@ function leapLoop() {
 				leftHand = frame.hands[1];
 			}
 			  
-			t = rightHand.palmVelocity;
-			t_L = leftHand.palmVelocity;
-			
-			/*if (leftHand.pointables.length==3)
-				console.log("shit");
-			if(rightHand.pointables.length == 3 && rightObj.position.z < 25)
-				rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)),-t[2]/5000);
-			else {
-				rotateAroundWorldAxis(rightObj, yAxis,  (t[0]/50)* Math.PI/180);
-				rotateAroundWorldAxis(rightObj, xAxis,  (-t[1]/50)* Math.PI/180);
-			}*/
-				
-			
+			vRight = rightHand.palmVelocity;
+			vLeft = leftHand.palmVelocity;
+			//camera.visble = false;
 			switch(rightHand.pointables.length) {
 				case 1:
-					rotateAroundWorldAxis(rightTransObj, yAxis,  (-t[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(rightTransObj, xAxis,  (t[1]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightTransObj, xAxis,  (vRight[1]/50)* Math.PI/180);
 					break;
 				case 3:
 					if(rightObj.position.z < 25)
-						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)),-t[2]/5000);
+						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)),-vRight[2]/5000);
 					break;
 				default:
-					rotateAroundWorldAxis(rightObj, yAxis,  (t[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(rightObj, xAxis,  (-t[1]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightObj, xAxis,  (-vRight[1]/50)* Math.PI/180);
 					break;
 			}
 			
 			switch(leftHand.pointables.length) {
 				case 1:
-					rotateAroundWorldAxis(leftTransObj, yAxis,  (-t_L[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(leftTransObj, xAxis,  (t_L[1]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftTransObj, yAxis,  (-vLeft[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
 					break;
 				case 3:
 					if(leftObj.position.z < 25)
-						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)),-t_L[2]/5000);
+						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)),-vLeft[2]/5000);
 					break;
 				default:
-					rotateAroundWorldAxis(leftObj, yAxis,  (t_L[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(leftObj, xAxis,  (-t_L[1]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftObj, yAxis,  (vLeft[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftObj, xAxis,  (-vLeft[1]/50)* Math.PI/180);
 					break;
 			}
-			
-			/*
-			rotateAroundWorldAxis(rightObj, yAxis,  (t[0]/50)* Math.PI/180);
-			rotateAroundWorldAxis(rightObj, xAxis,  (-t[1]/50)* Math.PI/180);
-			rotateAroundWorldAxis(leftObj, yAxis,  (t_L[0]/50)* Math.PI/180);
-			rotateAroundWorldAxis(leftObj, xAxis,  (-t_L[1]/50)* Math.PI/180);
-			
-			if(leftObj.position.z < 25)
-				leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)),-t_L[2]/5000);
-			*/
-			
-			//else
-				//leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,30)), -t_L[2]/1000);
-			//console.log(t[2]);
-		
 			
 		}
 		
 		else {
+		if(!plane.visble)
+			camera.add(plane);
+			//camera.traverse( function ( object ) { object.visible = true; } );
 			//No performance imporvemnt seen
 			//if(!$( "#twoHandsError" ).dialog("isOpen")) 
 				//$( "#twoHandsError" ).dialog("open");
 		}
 	//camera.updateProjectionMatrix();
 	//camera.lookAt(scene.position);
-
 	});	
 }
 	
