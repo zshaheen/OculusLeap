@@ -29,48 +29,176 @@ var water_oxygenMat = new THREE.MeshLambertMaterial({
 var carbon_cylinderMat = new THREE.MeshLambertMaterial({
 	color: 0x00FF00 // green
 });
+
 var defaultMat = new THREE.MeshLambertMaterial( { 
 	color: 0xFF33CC //bright pink
 });
 	
 
 //Leap Variables
-var leapController;
+var leapController;// = new Leap.Controller();
+//	leapController.connect();
 var rightHand, leftHand;
 var rotWorldMatrix;
 var yAxis = new THREE.Vector3(0,1,0);
 var xAxis = new THREE.Vector3(1,0,0);
 	
 //Error Dialog variables
-var dialogMinHeight = 200;
-var dialogMinWidth = 500;
+//var dialogMinHeight = 200;
+//var dialogMinWidth = 500;
+var handError, leapError;
 
+//matrix data
+//var comdata;
+//an square matrix of size n where n is the # of files in a specific folder
+var simMatrix;
 
 window.onload = function() {
-	init();
+	/*init();
+	initErrors();
 	initOculus();
 	initLeap();
 	draw();
 	//leapLoop();
+	*/
+	simReadData();
 }
 
+
+function simReadData() {
+	var dirs; // List of directories. ex: 0x1, 0x2, etc.
+	var listFiles; //List of files in a specific directory
+	var comdata = [];
+	var tempData, line;
+	
+	dirs = ["0x1","0x2"];
+	//assuming we opened the folder 0x1
+	listFiles = ["5155", "6288", "6465", "7067", "7392", "7861", "9996"];
+	
+
+	var comdata = [];
+	for(var i=0; i<listFiles.length; i++) {
+	
+		var get = $.get("data/" + dirs[0]+"/"+listFiles[i], function(data) {
+			// split the data by line
+			tempData = data.split("\n");
+			line = tempData[0].split(" ");
+			
+			comdata.push( [line[1], line[2], line[3]] );
+		});
+	}
+	
+	get.success(function() {
+		simCreateMatrix(comdata, listFiles.length);
+		console.log(simMatrix[0].sort );
+	});
+}
+
+function simCreateMatrix(comdata, size) {
+	//console.log(comdata[0]);
+	//console.log(comdata[1])
+	//console.log(euclideanDistance( comdata[0],comdata[1] ));
+	//create the similarity matrix
+	/*
+	* 
+	* 
+	* 
+	*/
+	//Make simMatrix a  2d array
+	simMatrix = [];
+	var temp1dArray;// = [];
+	
+	//Can optimize below
+	for(var i=0; i<size; i++) {
+		temp1dArray = [];
+		
+		for(var j=0; j<size; j++) {
+			//console.log( i.toString() + j.toString() );
+			temp1dArray.push(euclideanDistance(comdata[i], comdata[j]));
+		}
+		simMatrix.push(temp1dArray);
+	}
+	
+	/*
+	for(var i=0; i<size; i++) {
+		for(var j=0; j<size; j++) {
+			//if(i == 0)
+				console.log(comdata[i] + " & " + comdata[j]);
+			//console.log( i + ", " + j + ": " + simMatrix[i][j] );
+		}
+	}
+	*/
+	
+	//now sort the arrays based on size, 
+	/* Looking in folder 0x1
+	*	simMatrix[0]: [0, 0.644709229603982, 0.41076734188039493, 0.20185418833198668, 
+	*					0.18053564755757986, 0.42409442817103027, 0.6005851074860239]
+	*
+	*	after calling sortWithIndeces(simMatrix[0]), simMatrix[0] is now ordered: 
+	*				[0, 0.18053564755757986, 0.20185418833198668, 0.41076734188039493, 
+	*					0.42409442817103027, 0.6005851074860239, 0.644709229603982]
+	*
+	*	simMatrix[0].sortIndices is [0, 4, 3, 2, 5, 6, 1] 
+	*	meaning that the files in listFiles[4] is the most similar (other than the files itself), 
+	*/
+	
+	for(var i=0; i<size; i++) {
+		console.log("NEW LOOP:" + i)
+		console.log(simMatrix[i]);
+		sortWithIndeces(simMatrix[i]);
+		console.log(simMatrix[i]);
+		console.log(simMatrix[i].sortIndices);
+		//alert(test.sortIndices.join(","));
+	}
+	
+	//Now save simMatrix into a file:
+	//CAN'T DO WITH JAVASCRIPT
+	
+}
+
+function sortWithIndeces(toSort) {
+	//code taken from http://stackoverflow.com/questions/3730510/javascript-sort-array-and-return-an-array-of-indicies-that-indicates-the-positi
+	for (var i = 0; i < toSort.length; i++) {
+		toSort[i] = [toSort[i], i];
+	}
+	
+	toSort.sort(function(left, right) {
+		return left[0] < right[0] ? -1 : 1;
+	});
+	
+	toSort.sortIndices = [];
+	for (var j = 0; j < toSort.length; j++) {
+		toSort.sortIndices.push(toSort[j][1]);
+		toSort[j] = toSort[j][0];
+	}
+	return toSort;
+}
+
+function euclideanDistance(v1, v2) {
+
+	return Math.sqrt( ((v1[0]-v2[0])*(v1[0]-v2[0])) 
+		+  ((v1[1]-v2[1])*(v1[1]-v2[1])) 
+		+  ((v1[2]-v2[2])*(v1[2]-v2[2])) );
+	
+}
 
 function init() {
 	window.addEventListener('resize', onResize, false);
 	
 	//Initialize the errors
 	//NOTE: .dialog({ autoOpen: false }); must be the first command
-		$( "#twoHandsError" ).dialog({ autoOpen: false });
+	/*	$( "#twoHandsError" ).dialog({ autoOpen: false });
 		$( "#twoHandsError" ).dialog({ minHeight: dialogMinHeight });
 		$( "#twoHandsError" ).dialog({ minWidth: dialogMinWidth });
-		
+	*/
+	
 	scene = new THREE.Scene();
 	
 	aspectRatio = window.innerWidth / window.innerHeight;
 	
 	camera = new THREE.PerspectiveCamera(45, aspectRatio, 1, 10000);
 	camera.useQuaternion = true;
-	camera.position.set(0,0,30 );
+	camera.position.set(0,0,30);
 	//Can possibly delete camera.lookAt(scene.position);
 	camera.lookAt(scene.position);
 	
@@ -372,7 +500,7 @@ function parseDataToAtoms(data, objectLR) {
 	
 }
 
-var plane;
+
 function draw() {
 	
 	//starts the entire chain that draws all of the objects and instantiants ...
@@ -387,23 +515,11 @@ function draw() {
 	leftTransObj.position = camera.position;
 	rightTransObj.position = camera.position;
 	
-	var geometry = new THREE.PlaneGeometry( 20, 10 );
-	var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-	plane = new THREE.Mesh( geometry, material );
-	//plane.position = new THREE.Vector3(-10,0,0);
-	
-	scene.add( plane );
-	//camera.add(plane);
-	plane.position.set(0,-7,-3);
-	camera.add(plane);
-	//plane.visble = false;
-	scene.add( camera );
+	//initErrors();
 
 	var file1="data/0x1/5155", file2="data/2";
 	getData1(file1, file2);
-	
-	
-	
+		
 	/*
 	var geometry = new THREE.SphereGeometry(50, 10, 10);
 	//blue = 0x0000FF, white = 0xFFFFFF/0xFCFCFC, red = 0xFF3333, bright green = 0x00FF00
@@ -430,11 +546,56 @@ function draw() {
 }
 
 
+function initErrors() {
+	var handsGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
+	//var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+	var handsTexture = THREE.ImageUtils.loadTexture('textures/nohands.gif');
+	var handsMat = new THREE.MeshBasicMaterial({map: handsTexture});
+	handError = new THREE.Mesh(handsGeo, handsMat);
+	handError.position.set(0, -0.2, -0.5);
+	scene.add(handError);
+	
+	/*var leapGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
+	var leapTexture = THREE.ImageUtils.loadTexture('textures/noleap.png');
+	var leapMat = new THREE.MeshBasicMaterial({map: leapTexture});
+	leapError = new THREE.Mesh(leapGeo, leapMat);
+	leapError.position.set(0, 0, -0.5);
+	scene.add(leapError);
+	
+	camera.add(leapError);*/
+	camera.add(handError);
+	
+	scene.add( camera );	
+}
+
+
 function initLeap() {
 	leapController = new Leap.Controller();
 	leapController.connect();
-	//$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
 }
+
+/*
+leapController.on( 'connect' , function(){
+
+		console.log( 'connect' );
+		//if(leapError.visble)
+			//camera.remove(leapError);
+
+});
+leapController.on( 'deviceConnected' , function(){
+
+		console.log( 'deviceConnected.' );
+		//if(leapError.visble)
+			camera.remove(leapError);
+
+});
+
+leapController.on( 'deviceDisconnected' , function(){
+
+		console.log( 'disconnect.' );
+		camera.add(leapError);
+});
+*/
 
 /*
 function notification(name, hide) {
@@ -470,17 +631,23 @@ function leapLoop() {
 		//onResize();
 		stats.update();
 		leapController.on('deviceDisconnected', function() {
-			$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
+			//$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
+			//////////////camera.remove(leapError);
 		});
-		console.log(plane.position);
+		
+		/*leapController.on( 'deviceDisconnected' , function(){
+
+			  //console.log( 'disconnect.' );
+				camera.add(leapError);
+		});*/
 		
 		//Leap is connected, remove the error
-		$( "#twoHandsError" ).dialog( "close" );
+		//$( "#twoHandsError" ).dialog( "close" );
 		
 		if (frame.valid && frame.hands.length == 2) {
 		//camera.traverse( function ( object ) { object.visible = false; } );
-		if(plane.visible)
-			camera.remove(plane);
+		if(handError.visible)
+			camera.remove(handError);
 		
 			if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
 				//hands[0] is to the left of hands[1]
@@ -494,7 +661,7 @@ function leapLoop() {
 			  
 			vRight = rightHand.palmVelocity;
 			vLeft = leftHand.palmVelocity;
-			//camera.visble = false;
+			
 			switch(rightHand.pointables.length) {
 				case 1:
 					rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
@@ -528,16 +695,13 @@ function leapLoop() {
 		}
 		
 		else {
-		if(!plane.visble)
-			camera.add(plane);
-			//camera.traverse( function ( object ) { object.visible = true; } );
-			//No performance imporvemnt seen
-			//if(!$( "#twoHandsError" ).dialog("isOpen")) 
-				//$( "#twoHandsError" ).dialog("open");
+		if(!handError.visble)
+			camera.add(handError);
 		}
 	//camera.updateProjectionMatrix();
 	//camera.lookAt(scene.position);
 	});	
+	
 }
 	
 
