@@ -36,8 +36,8 @@ var defaultMat = new THREE.MeshLambertMaterial( {
 	
 
 //Leap Variables
-var leapController;// = new Leap.Controller();
-//	leapController.connect();
+var leapController = new Leap.Controller();
+	leapController.connect();
 var rightHand, leftHand;
 var rotWorldMatrix;
 var yAxis = new THREE.Vector3(0,1,0);
@@ -52,22 +52,26 @@ var handError, leapError;
 //var comdata;
 //an square matrix of size n where n is the # of files in a specific folder
 var simMatrix;
+var fileName1, fileName2;
+var currentIndex=0;
+var listFiles; //List of files in a specific directory
+var prefix;
 
 window.onload = function() {
 	/*init();
 	initErrors();
 	initOculus();
 	initLeap();
-	draw();
+	draw();*/
 	//leapLoop();
-	*/
+	
 	simReadData();
 }
 
 
 function simReadData() {
 	var dirs; // List of directories. ex: 0x1, 0x2, etc.
-	var listFiles; //List of files in a specific directory
+	
 	var comdata = [];
 	var tempData, line;
 	
@@ -75,11 +79,12 @@ function simReadData() {
 	//assuming we opened the folder 0x1
 	listFiles = ["5155", "6288", "6465", "7067", "7392", "7861", "9996"];
 	
+	prefix = "data/" + dirs[0]+"/";
 
 	var comdata = [];
 	for(var i=0; i<listFiles.length; i++) {
 	
-		var get = $.get("data/" + dirs[0]+"/"+listFiles[i], function(data) {
+		var get = $.get(prefix+listFiles[i], function(data) {
 			// split the data by line
 			tempData = data.split("\n");
 			line = tempData[0].split(" ");
@@ -90,7 +95,20 @@ function simReadData() {
 	
 	get.success(function() {
 		simCreateMatrix(comdata, listFiles.length);
-		console.log(simMatrix[0].sort );
+		console.log(simMatrix[0].sortIndices );
+		//set fileName1 and fileName2
+		currentIndex += 1;
+		fileName1 = prefix + listFiles[0];
+		fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
+		
+		//now call in the rest of the functions
+		init();
+		initErrors();
+		initOculus();
+		initLeap();
+		draw();
+		//now load in listFiles[
+			
 	});
 }
 
@@ -143,12 +161,11 @@ function simCreateMatrix(comdata, size) {
 	*/
 	
 	for(var i=0; i<size; i++) {
-		console.log("NEW LOOP:" + i)
-		console.log(simMatrix[i]);
+		//console.log("NEW LOOP:" + i)
+		//console.log(simMatrix[i]);
 		sortWithIndeces(simMatrix[i]);
-		console.log(simMatrix[i]);
-		console.log(simMatrix[i].sortIndices);
-		//alert(test.sortIndices.join(","));
+		//console.log(simMatrix[i]);
+		//console.log(simMatrix[i].sortIndices);
 	}
 	
 	//Now save simMatrix into a file:
@@ -469,11 +486,32 @@ function getData2(filename) {
 	});
 }
 
+function removeObjects() {
+	//deletes rightObj, leftObj,  rightTransObj, leftTransObj and all their children
+	var i, obj;
+	
+	
+
+	for ( i = rightObj.children.length - 1; i >= 0 ; i -- ) {
+		obj = rightObj.children[ i ];
+			rightObj.remove(obj);
+	}
+	for ( i = leftObj.children.length - 1; i >= 0 ; i -- ) {
+		obj = leftObj.children[ i ];
+			leftObj.remove(obj);
+	}
+	
+	scene.remove(rightTransObj);
+	scene.remove(leftTransObj);
+	scene.remove(leftObj);
+	scene.remove(rightObj);
+}
 
 function parseDataToAtoms(data, objectLR) {
 	var numberOfAtoms = parseInt(data[1]);
 		
 	// create the array to hold the parsed data
+	//console.log(numberOfAtoms);
 	var atoms = new Array(numberOfAtoms);
 	
 	//Each element in parsed[] is an array of 4 
@@ -517,8 +555,8 @@ function draw() {
 	
 	//initErrors();
 
-	var file1="data/0x1/5155", file2="data/2";
-	getData1(file1, file2);
+	//var fileName1="data/0x1/5155", fileName2="data/2";
+	getData1(fileName1, fileName2);
 		
 	/*
 	var geometry = new THREE.SphereGeometry(50, 10, 10);
@@ -612,7 +650,11 @@ function notification(name, hide) {
 	} );
 	
 }*/
-
+leapController.on("gesture", function(gesture){
+			console.log("Gesture Detected!");
+		});
+		
+var once = true;
 function leapLoop() {
 	
 	var vRight, vLeft;
@@ -625,7 +667,7 @@ function leapLoop() {
 	onResize();
 	
 	
-	Leap.loop(function(frame) {
+	Leap.loop({enableGestures: true}, function(frame) {
 		//stats.update();
 		render();
 		//onResize();
@@ -661,7 +703,7 @@ function leapLoop() {
 			  
 			vRight = rightHand.palmVelocity;
 			vLeft = leftHand.palmVelocity;
-			
+			//console.log(rightObj.position.z);
 			switch(rightHand.pointables.length) {
 				case 1:
 					rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
@@ -669,7 +711,23 @@ function leapLoop() {
 					break;
 				case 3:
 					if(rightObj.position.z < 25)
-						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)),-vRight[2]/5000);
+						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
+					if(rightObj.position.z < -250 && once == true) {
+						//call below when object is zoomed way back
+						currentIndex += 1;
+						//console.log("listFile.length: " + listFiles.length);
+						if(currentIndex == listFiles.length)
+							currentIndex = 0;
+						fileName1 = prefix + listFiles[0];
+						//check below
+						if(simMatrix[0].sortIndices[currentIndex] == 0)
+							currentIndex += 1;
+						fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
+						console.log("currIndex: " + currentIndex);
+						console.log(fileName2);
+						removeObjects();
+						draw();
+					}
 					break;
 				default:
 					rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
@@ -684,7 +742,10 @@ function leapLoop() {
 					break;
 				case 3:
 					if(leftObj.position.z < 25)
-						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)),-vLeft[2]/5000);
+						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
+					if(leftObj.position.z < -250) {
+						console.log("obj disappear");
+					}
 					break;
 				default:
 					rotateAroundWorldAxis(leftObj, yAxis,  (vLeft[0]/50)* Math.PI/180);
