@@ -47,6 +47,7 @@ var xAxis = new THREE.Vector3(1,0,0);
 //var dialogMinHeight = 200;
 //var dialogMinWidth = 500;
 var handError, leapError;
+var leftLabel = null, rightLabel = null;
 
 //matrix data
 //var comdata;
@@ -97,6 +98,7 @@ function simReadData() {
 		simCreateMatrix(comdata, listFiles.length);
 		console.log(simMatrix[0].sortIndices );
 		//set fileName1 and fileName2
+		//Fix this so that threr aren't any repeats
 		currentIndex += 1;
 		fileName1 = prefix + listFiles[0];
 		fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
@@ -486,11 +488,24 @@ function getData2(filename) {
 	});
 }
 
+
 function removeObjects() {
 	//deletes rightObj, leftObj,  rightTransObj, leftTransObj and all their children
-	var i, obj;
-	
-	
+	var obj, i;
+	for ( i = scene.children.length - 1; i >= 0 ; i -- ) {
+	    obj = scene.children[ i ];
+	    if ( obj !== ambient && obj !== camera && obj !== point && obj !== handError ) {
+	        scene.remove(obj);
+	    }
+	}
+
+	rightLabel.visible = false;
+	leftLabel.visible = false;
+
+	//scene.remove(rightLabel);
+	//scene.remove(leftLabel);
+
+	/*var i, obj;
 
 	for ( i = rightObj.children.length - 1; i >= 0 ; i -- ) {
 		obj = rightObj.children[ i ];
@@ -501,10 +516,22 @@ function removeObjects() {
 			leftObj.remove(obj);
 	}
 	
+	//rightLabel.position.set(100,100,100);
+	//leftLabel.position.set(100,100,100);
+	
+	//rightLabel.remove(rightLabel.children[0]);
+	
+	//scene.remove(rightLabel.name);
+	//scene.remove(leftLabel.name);
+	rightLabel.position.set(0.2, 0.3, -0.5);
+	leftLabel.position.set(-0.2, 0.3, -0.5);
+
+
 	scene.remove(rightTransObj);
 	scene.remove(leftTransObj);
 	scene.remove(leftObj);
 	scene.remove(rightObj);
+	*/
 }
 
 function parseDataToAtoms(data, objectLR) {
@@ -554,7 +581,10 @@ function draw() {
 	rightTransObj.position = camera.position;
 	
 	//initErrors();
-
+	console.log("fileName1_draw: " + fileName1);
+	console.log("fileName2_draw: " + fileName2);
+	initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+	//initLabels(0, currentIndex, listFiles.length ,listFiles[0], listFiles[currentIndex]);
 	//var fileName1="data/0x1/5155", fileName2="data/2";
 	getData1(fileName1, fileName2);
 		
@@ -593,17 +623,97 @@ function initErrors() {
 	handError.position.set(0, -0.2, -0.5);
 	scene.add(handError);
 	
-	/*var leapGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
+	/*
+	var leapGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
 	var leapTexture = THREE.ImageUtils.loadTexture('textures/noleap.png');
 	var leapMat = new THREE.MeshBasicMaterial({map: leapTexture});
 	leapError = new THREE.Mesh(leapGeo, leapMat);
 	leapError.position.set(0, 0, -0.5);
 	scene.add(leapError);
 	
-	camera.add(leapError);*/
+	camera.add(leapError);
+	*/
+
+	/*
+	spritey = makeTextSprite( " (1/2) - 0x22  ", 
+		{ fontsize: 12, borderColor: {r:255, g:0, b:0, a:1.0}, backgroundColor: {r:255, g:100, b:100, a:0.8} } );
+	spritey.position.set(0,0,-camera.position.z);
+	//spritey.position.normalize();
+	scene.add( spritey );
+	*/
+
 	camera.add(handError);
 	
 	scene.add( camera );	
+}
+
+
+function initLabels(posL, posR, total, filenameLeft, filenameRight ){
+
+	//var labelGeo = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
+
+
+	leftLabel = createTextMaterial(posL, total, filenameLeft);
+	rightLabel = createTextMaterial(posR, total, filenameRight);
+	//createTextMaterial(rightLabel);
+
+	//var handsMat = new THREE.MeshBasicMaterial( { color: "red" } );
+	//leftLabel = new THREE.Mesh(labelGeo, handsMat);
+	
+	leftLabel.position.set(-0.2, 0.25, -0.5);
+	leftLabel.lookAt(new THREE.Vector3(0,0,1) );
+	scene.add(leftLabel);
+	camera.add(leftLabel);
+
+	rightLabel.position.set(0.2, 0.25, -0.5);
+	rightLabel.lookAt(new THREE.Vector3(0,0,1) );
+	scene.add(rightLabel);
+	camera.add(rightLabel);
+}
+
+//function createTextCanvas(text, color, font, size) {
+function createTextCanvas(pos, total, filename) {
+
+	var position = " "+ pos + "/" + total;
+	//var filename = " " + "88888";
+
+	var canvas = document.createElement('canvas');
+	var g = canvas.getContext('2d');
+	canvas.width = 100;
+	canvas.height = 100;
+	g.font = 'Bold 27px Arial';
+
+	g.fillStyle = 'white';
+	g.fillText(position ,0,40);
+	g.strokeStyle='black';
+	g.strokeText(position ,0,40);
+
+
+	g.fillText("  "+filename.split("/").pop() ,0,80);
+	g.strokeText("  "+filename.split("/").pop() ,0,80);
+	//g.fillText("  "+filename ,0,80);
+	//g.strokeText("  "+filename ,0,80);
+
+	return canvas;
+
+}
+
+function createTextMaterial(pos, total, filename) {
+
+	//applies the text to the geometry
+	console.log(filename);
+	var canvas = createTextCanvas(pos, total, filename);//createTextCanvas(text, 'black', 'Arial', 0.0000001);
+	var texture = new THREE.Texture(canvas);
+	var labelGeo = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
+	texture.needsUpdate = true;
+	var material = new THREE.MeshBasicMaterial({
+		map : texture,
+		color : "green"//,
+		//transparent : true
+	});
+	
+	return new THREE.Mesh(labelGeo, material);
+
 }
 
 
@@ -688,8 +798,15 @@ function leapLoop() {
 		
 		if (frame.valid && frame.hands.length == 2) {
 		//camera.traverse( function ( object ) { object.visible = false; } );
-		if(handError.visible)
-			camera.remove(handError);
+		/*
+		if(once == true) {
+			//camera.lookAt(new THREE.Vector3(0,0,0));
+			camera.target.position.copy( leftObj.position );
+			once = false;
+		}
+		*/
+			if(handError.visible)
+				camera.remove(handError);
 		
 			if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
 				//hands[0] is to the left of hands[1]
@@ -713,6 +830,7 @@ function leapLoop() {
 					if(rightObj.position.z < 25)
 						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
 					if(rightObj.position.z < -250 && once == true) {
+						//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
 						//call below when object is zoomed way back
 						currentIndex += 1;
 						//console.log("listFile.length: " + listFiles.length);
@@ -736,6 +854,7 @@ function leapLoop() {
 			}
 			
 			switch(leftHand.pointables.length) {
+				//spritey.position.set(0,0,0);
 				case 1:
 					rotateAroundWorldAxis(leftTransObj, yAxis,  (-vLeft[0]/50)* Math.PI/180);
 					rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
@@ -752,7 +871,15 @@ function leapLoop() {
 					rotateAroundWorldAxis(leftObj, xAxis,  (-vLeft[1]/50)* Math.PI/180);
 					break;
 			}
+
+			//spritey.position.set( leftObj.position.x, leftObj.position.y+5, leftObj.position.z  );
+			//spritey.position.set( rightObj.position.x, rightObj.position.y-10, rightObj.position.z-camera.position.z  );
+			//spritey.quaternion.copy( camera.quaternion );
+
+			//spritey.lookAt(camera.position);
+			//console.log(leftObj.position);
 			
+
 		}
 		
 		else {
