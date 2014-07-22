@@ -54,6 +54,7 @@ var interval = 0;
 //an square matrix of size n where n is the # of files in a specific folder
 var simMatrix;
 var fileName1, fileName2;
+var objRawData;
 var currentIndex=0;
 var listFiles; //List of files in a specific directory
 var prefix;
@@ -202,14 +203,8 @@ function euclideanDistance(v1, v2) {
 }
 
 function init() {
+
 	window.addEventListener('resize', onResize, false);
-	
-	//Initialize the errors
-	//NOTE: .dialog({ autoOpen: false }); must be the first command
-	/*	$( "#twoHandsError" ).dialog({ autoOpen: false });
-		$( "#twoHandsError" ).dialog({ minHeight: dialogMinHeight });
-		$( "#twoHandsError" ).dialog({ minWidth: dialogMinWidth });
-	*/
 	
 	scene = new THREE.Scene();
 	
@@ -224,8 +219,6 @@ function init() {
 	renderer = new THREE.WebGLRenderer({antialias:true});
 	renderer.setClearColor(0xdbf7ff);
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	
-	//scene.fog = new THREE.Fog(0xdbf7ff, 300, 700);
 
 	element = document.getElementById('viewport');
 	element.appendChild(renderer.domElement);
@@ -262,7 +255,7 @@ function initOculus() {
 	oculusBridge.connect();
 
 	riftCam = new THREE.OculusRiftEffect(renderer);
-	onResize();
+	//onResize();
 }
 
 
@@ -303,15 +296,7 @@ function bridgeOrientationUpdated(quatValues) {
 	camera.quaternion.copy(quat);
 }
 
-/*
-function animate() {
-	//onResize();
 
-	if(render()){
-		requestAnimationFrame(animate);  
-	}
-}  
-*/
 
 /*
 function render() { 
@@ -354,6 +339,7 @@ function rotateAroundWorldAxis(object, axis, radians) {
 	object.matrix = rotWorldMatrix;	
 	//OR object.rotation.setFromRotationMatrix(object.matrix);
 	object.rotation.setFromRotationMatrix(object.matrix);
+
 }
 
 
@@ -376,7 +362,6 @@ function avgPos(data, numberOfAtoms) {
 function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	//THREE.SphereGeometry(radius, wSegments, hSegments)
 	var geometry = new THREE.SphereGeometry(1, 7, 7);
-	
 	
 	var meshArr = [];
 	
@@ -481,10 +466,7 @@ function getData2(filename) {
 		
 		leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
 		rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
-		
-		//camera.lookAt( scene.position );
-		//camera.position.set(0,0,30 );
-		//renderer.render(scene, camera);
+
 		leapLoop();
 	});
 }
@@ -500,8 +482,8 @@ function removeObjects() {
 	    }
 	}*/
 
-	//rightLabel.visible = false;
-	//leftLabel.visible = false;
+	rightLabel.visible = false;
+	leftLabel.visible = false;
 
 	//scene.remove(rightLabel);
 	//scene.remove(leftLabel);
@@ -567,6 +549,64 @@ function parseDataToAtoms(data, objectLR) {
 }
 
 
+function drawObject(filename, object, isLeft){
+//loads an object with the corresponding filename to the object
+
+	//Delete the object and all of its children
+	var obj;
+	if(object.children.length > 1) { //or 0?
+		for (var i = object.children.length - 1; i >= 0 ; i -- ) {
+			obj = object.children[ i ];
+				object.remove(obj);
+		}
+	}
+
+//currently assuming the object is the right object
+//this.object = new THREE.Object3D();
+
+//open the file:
+	var get = $.get(filename, function(data) {
+		// split the data by line
+		objRawData = data.split("\n");
+	});
+
+	get.success(function() {
+		//draw the molecules
+		parseDataToAtoms(objRawData, object);
+		
+	if(isLeft) {
+		object.position = new THREE.Vector3(-10,0,-camera.position.z);
+		leftTransObj.add(object);
+
+		//edit hte labels
+		leftLabel.visible = false;
+		//TODO remove bottom
+		var leftIndex = 0;
+		leftLabel = createTextMaterial(leftIndex, listFiles.length-1, filename);
+		leftLabel.position.set(-0.2, 0.25, -0.5);
+		leftLabel.lookAt(new THREE.Vector3(0,0,1) );
+		scene.add(leftLabel);
+		camera.add(leftLabel);
+
+	}
+	else {
+		object.position = new THREE.Vector3(10,0,-camera.position.z);
+		rightTransObj.add(object);
+
+		//edit hte labels
+		rightLabel.visible = false;
+		//rightLabel.dispose();
+		rightLabel = createTextMaterial(currentIndex, listFiles.length-1, filename);
+		rightLabel.position.set(0.2, 0.25, -0.5);
+		rightLabel.lookAt(new THREE.Vector3(0,0,1) );
+		scene.add(rightLabel);
+		camera.add(rightLabel);
+	}
+
+
+	});
+}
+
 function draw() {
 	
 	//starts the entire chain that draws all of the objects and instantiants ...
@@ -590,32 +630,18 @@ function draw() {
 
 	//initLabels(0, currentIndex, listFiles.length ,listFiles[0], listFiles[currentIndex]);
 	//var fileName1="data/0x1/5155", fileName2="data/2";
-	getData1(fileName1, fileName2);
-		
-	/*
-	var geometry = new THREE.SphereGeometry(50, 10, 10);
-	//blue = 0x0000FF, white = 0xFFFFFF/0xFCFCFC, red = 0xFF3333, bright green = 0x00FF00
-	var material = new THREE.MeshLambertMaterial( { color: 'blue' } );
-	var sphere = new THREE.Mesh( geometry, material );
-	//sphere.position = new THREE.Vector3(100,100,100);
-	sphere.overdraw = true;
-	scene.add(sphere);
-	
-	//rightObj object
-	var geometry = new THREE.CubeGeometry(50, 40, 40);//new THREE.SphereGeometry(50, 40, 40)
-	var material = new THREE.MeshLambertMaterial( { color: 'blue' } );//new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture( 'media/rightObjSatTexture.jpg' ), ambient: 0x050505, color: 0xFFFFFF, specular: 0x555555, bumpMap: rightObjBumpImage, bumpScale: 19, metal: true } );
-	rightObj = new THREE.Mesh( geometry, material );
-	rightObj.position = new THREE.Vector3(50,50,50);
-	scene.add(rightObj);
+	//getData1(fileName1, fileName2);
+	drawObject(fileName1, leftObj, true);
+	drawObject(fileName2, rightObj, false);
+	leapLoop();
 
-	//object 2
-	var geometry2 = new THREE.CubeGeometry(50, 40, 40);//new THREE.SphereGeometry(50, 40, 40)
-	leftObj = new THREE.Mesh( geometry2, material );
-	leftObj.position = new THREE.Vector3(-50,50,50);
-	scene.add(leftObj);
+	/*leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
+	rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
+
+	leapLoop();
 	*/
-	
 }
+
 
 
 function initErrors() {
@@ -799,8 +825,10 @@ function render() {
 						fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
 						console.log("currIndex: " + currentIndex);
 						console.log(fileName2);
-						removeObjects();
-						draw();
+						//removeObjects();
+						//draw();
+						drawObject(fileName2, rightObj, false);
+						//initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
 					}
 					break;
 				default:
@@ -827,14 +855,7 @@ function render() {
 					break;
 			}
 
-			//spritey.position.set( leftObj.position.x, leftObj.position.y+5, leftObj.position.z  );
-			//spritey.position.set( rightObj.position.x, rightObj.position.y-10, rightObj.position.z-camera.position.z  );
-			//spritey.quaternion.copy( camera.quaternion );
-
-			//spritey.lookAt(camera.position);
-			//console.log(leftObj.position);
-			
-
+			//console.log(leftObj.position)
 		}
 		
 		else {
@@ -865,13 +886,13 @@ function leapLoop() {
 	//Delete bottom if performance hit
 	onResize();
 	animate();
-	/*if(interval  != 0)
+	if(interval  != 0)
 		clearInterval(interval);
 
 	interval  = setInterval(function(){	
 		leftLabel.visible = false;
 		rightLabel.visible = false;
-	}, 5000);*/
+	}, 5000);
 
 	/*Leap.loop(function(frame) {
 		    //stats.begin();
