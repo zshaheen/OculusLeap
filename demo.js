@@ -579,7 +579,8 @@ function drawObject(filename, object, isLeft){
 		leftTransObj.add(object);
 
 		//edit hte labels
-		leftLabel.visible = false;
+		//if(leftLabel.visible)
+		//	leftLabel.visible = false;
 		//TODO remove bottom
 		var leftIndex = 0;
 		leftLabel = createTextMaterial(leftIndex, listFiles.length-1, filename);
@@ -587,6 +588,7 @@ function drawObject(filename, object, isLeft){
 		leftLabel.lookAt(new THREE.Vector3(0,0,1) );
 		scene.add(leftLabel);
 		camera.add(leftLabel);
+		rightLabel.visible = true;
 
 	}
 	else {
@@ -594,15 +596,24 @@ function drawObject(filename, object, isLeft){
 		rightTransObj.add(object);
 
 		//edit hte labels
-		rightLabel.visible = false;
+		//if(rightLabel.visible)
+		///	rightLabel.visible = false;
 		//rightLabel.dispose();
 		rightLabel = createTextMaterial(currentIndex, listFiles.length-1, filename);
 		rightLabel.position.set(0.2, 0.25, -0.5);
 		rightLabel.lookAt(new THREE.Vector3(0,0,1) );
 		scene.add(rightLabel);
 		camera.add(rightLabel);
+		leftLabel.visible = true;
 	}
 
+	//if(interval  != 0)
+		//clearInterval(interval);
+
+	interval  = setInterval(function(){	
+		leftLabel.visible = false;
+		rightLabel.visible = false;
+	}, 5000);
 
 	});
 }
@@ -624,11 +635,10 @@ function draw() {
 	//initErrors();
 	console.log("fileName1_draw: " + fileName1);
 	console.log("fileName2_draw: " + fileName2);
-	initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+	//initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
 
 
 
-	//initLabels(0, currentIndex, listFiles.length ,listFiles[0], listFiles[currentIndex]);
 	//var fileName1="data/0x1/5155", fileName2="data/2";
 	//getData1(fileName1, fileName2);
 	drawObject(fileName1, leftObj, true);
@@ -662,14 +672,6 @@ function initErrors() {
 	scene.add(leapError);
 	
 	camera.add(leapError);
-	*/
-
-	/*
-	spritey = makeTextSprite( " (1/2) - 0x22  ", 
-		{ fontsize: 12, borderColor: {r:255, g:0, b:0, a:1.0}, backgroundColor: {r:255, g:100, b:100, a:0.8} } );
-	spritey.position.set(0,0,-camera.position.z);
-	//spritey.position.normalize();
-	scene.add( spritey );
 	*/
 
 	camera.add(handError);
@@ -779,89 +781,81 @@ function render() {
 
 	var frame = leapController.frame();
 	if (frame.valid && frame.hands.length == 2) {
-		//camera.traverse( function ( object ) { object.visible = false; } );
-		/*
-		if(once == true) {
-			//camera.lookAt(new THREE.Vector3(0,0,0));
-			camera.target.position.copy( leftObj.position );
-			once = false;
-		}
-		*/
-			if(handError.visible)
-				camera.remove(handError);
-		
-			if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
-				//hands[0] is to the left of hands[1]
-				rightHand = frame.hands[1];
-				leftHand = frame.hands[0];
-			}
-			else {
-				rightHand = frame.hands[0];
-				leftHand = frame.hands[1];
-			}
-			  
-			vRight = rightHand.palmVelocity;
-			vLeft = leftHand.palmVelocity;
-			//console.log(rightObj.position.z);
-			switch(rightHand.pointables.length) {
-				case 1:
-					rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(rightTransObj, xAxis,  (vRight[1]/50)* Math.PI/180);
-					break;
-				case 3:
-					if(rightObj.position.z < 25)
-						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
-					if(rightObj.position.z < -250 /*&& once == true*/) {
-						//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
-						//call below when object is zoomed way back
-						currentIndex += 1;
-						//console.log("listFile.length: " + listFiles.length);
-						if(currentIndex == listFiles.length)
-							currentIndex = 0;
-						fileName1 = prefix + listFiles[0];
-						//check below
-						if(simMatrix[0].sortIndices[currentIndex] == 0)
-							currentIndex += 1;
-						fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
-						console.log("currIndex: " + currentIndex);
-						console.log(fileName2);
-						//removeObjects();
-						//draw();
-						drawObject(fileName2, rightObj, false);
-						//initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
-					}
-					break;
-				default:
-					rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(rightObj, xAxis,  (-vRight[1]/50)* Math.PI/180);
-					break;
-			}
-			
-			switch(leftHand.pointables.length) {
-				case 1:
-					rotateAroundWorldAxis(leftTransObj, yAxis,  (-vLeft[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
-					break;
-				case 3:
-					if(leftObj.position.z < 25)
-						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
-					if(leftObj.position.z < -250) {
-						console.log("obj disappear");
-					}
-					break;
-				default:
-					rotateAroundWorldAxis(leftObj, yAxis,  (vLeft[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(leftObj, xAxis,  (-vLeft[1]/50)* Math.PI/180);
-					break;
-			}
 
-			//console.log(leftObj.position)
+		if(handError.visible)
+			camera.remove(handError);
+	
+		if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
+			//hands[0] is to the left of hands[1]
+			rightHand = frame.hands[1];
+			leftHand = frame.hands[0];
+		}
+		else {
+			rightHand = frame.hands[0];
+			leftHand = frame.hands[1];
+		}
+		  
+		vRight = rightHand.palmVelocity;
+		vLeft = leftHand.palmVelocity;
+		//console.log(rightObj.position.z);
+		switch(rightHand.pointables.length) {
+			case 1:
+				rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
+				rotateAroundWorldAxis(rightTransObj, xAxis,  (vRight[1]/50)* Math.PI/180);
+				break;
+			case 3:
+				if(rightObj.position.z < 25)
+					rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
+				if(rightObj.position.z < -250 /*&& once == true*/) {
+					//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
+					//call below when object is zoomed way back
+					currentIndex += 1;
+					//console.log("listFile.length: " + listFiles.length);
+					if(currentIndex == listFiles.length)
+						currentIndex = 0;
+					fileName1 = prefix + listFiles[0];
+					//check below
+					if(simMatrix[0].sortIndices[currentIndex] == 0)
+						currentIndex += 1;
+					fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
+					console.log("currIndex: " + currentIndex);
+					console.log(fileName2);
+					//removeObjects();
+					//draw();
+					drawObject(fileName2, rightObj, false);
+					//initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+				}
+				break;
+			default:
+				rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
+				rotateAroundWorldAxis(rightObj, xAxis,  (-vRight[1]/50)* Math.PI/180);
+				break;
 		}
 		
-		else {
-			if(!handError.visble)
-				camera.add(handError);
-		} 
+		switch(leftHand.pointables.length) {
+			case 1:
+				rotateAroundWorldAxis(leftTransObj, yAxis,  (-vLeft[0]/50)* Math.PI/180);
+				rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
+				break;
+			case 3:
+				if(leftObj.position.z < 25)
+					leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
+				if(leftObj.position.z < -250) {
+					console.log("obj disappear");
+				}
+				break;
+			default:
+				rotateAroundWorldAxis(leftObj, yAxis,  (vLeft[0]/50)* Math.PI/180);
+				rotateAroundWorldAxis(leftObj, xAxis,  (-vLeft[1]/50)* Math.PI/180);
+				break;
+		}
+
+	}
+	
+	else {
+		if(!handError.visble)
+			camera.add(handError);
+	} 
 	riftCam.render(scene, camera);
 }
 
@@ -885,125 +879,8 @@ function leapLoop() {
 	rightTransObj.add(rightObj);
 	//Delete bottom if performance hit
 	onResize();
+	
 	animate();
-	if(interval  != 0)
-		clearInterval(interval);
-
-	interval  = setInterval(function(){	
-		leftLabel.visible = false;
-		rightLabel.visible = false;
-	}, 5000);
-
-	/*Leap.loop(function(frame) {
-		    //stats.begin();
-    	stats.update();
-		render();
-		
-		
-		/*leapController.on( 'deviceDisconnected' , function(){
-
-			  //console.log( 'disconnect.' );
-				camera.add(leapError);
-		});
-		
-		//Leap is connected, remove the error
-		//$( "#twoHandsError" ).dialog( "close" );
-		
-		if (frame.valid && frame.hands.length == 2) {
-		//camera.traverse( function ( object ) { object.visible = false; } );
-		/*
-		if(once == true) {
-			//camera.lookAt(new THREE.Vector3(0,0,0));
-			camera.target.position.copy( leftObj.position );
-			once = false;
-		}
-		
-			if(handError.visible)
-				camera.remove(handError);
-		
-			if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
-				//hands[0] is to the left of hands[1]
-				rightHand = frame.hands[1];
-				leftHand = frame.hands[0];
-			}
-			else {
-				rightHand = frame.hands[0];
-				leftHand = frame.hands[1];
-			}
-			  
-			vRight = rightHand.palmVelocity;
-			vLeft = leftHand.palmVelocity;
-			//console.log(rightObj.position.z);
-			switch(rightHand.pointables.length) {
-				case 1:
-					rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(rightTransObj, xAxis,  (vRight[1]/50)* Math.PI/180);
-					break;
-				case 3:
-					if(rightObj.position.z < 25)
-						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
-					if(rightObj.position.z < -250 && once == true) {
-						//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
-						//call below when object is zoomed way back
-						currentIndex += 1;
-						//console.log("listFile.length: " + listFiles.length);
-						if(currentIndex == listFiles.length)
-							currentIndex = 0;
-						fileName1 = prefix + listFiles[0];
-						//check below
-						if(simMatrix[0].sortIndices[currentIndex] == 0)
-							currentIndex += 1;
-						fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
-						console.log("currIndex: " + currentIndex);
-						console.log(fileName2);
-						removeObjects();
-						draw();
-					}
-					break;
-				default:
-					rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(rightObj, xAxis,  (-vRight[1]/50)* Math.PI/180);
-					break;
-			}
-			
-			switch(leftHand.pointables.length) {
-				case 1:
-					rotateAroundWorldAxis(leftTransObj, yAxis,  (-vLeft[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
-					break;
-				case 3:
-					if(leftObj.position.z < 25)
-						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
-					if(leftObj.position.z < -250) {
-						console.log("obj disappear");
-					}
-					break;
-				default:
-					rotateAroundWorldAxis(leftObj, yAxis,  (vLeft[0]/50)* Math.PI/180);
-					rotateAroundWorldAxis(leftObj, xAxis,  (-vLeft[1]/50)* Math.PI/180);
-					break;
-			}
-
-			//spritey.position.set( leftObj.position.x, leftObj.position.y+5, leftObj.position.z  );
-			//spritey.position.set( rightObj.position.x, rightObj.position.y-10, rightObj.position.z-camera.position.z  );
-			//spritey.quaternion.copy( camera.quaternion );
-
-			//spritey.lookAt(camera.position);
-			//console.log(leftObj.position);
-			
-
-		}
-		
-		else {
-			if(!handError.visble)
-				camera.add(handError);
-		}
-	//camera.updateProjectionMatrix();
-	//camera.lookAt(scene.position);
-	
-	 //stats.end();
-	});	*/
-	
 }
 	
 
