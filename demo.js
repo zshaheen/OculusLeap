@@ -36,8 +36,7 @@ var defaultMat = new THREE.MeshLambertMaterial( {
 	
 
 //Leap Variables
-var leapController = new Leap.Controller();
-	leapController.connect();
+var leapController;
 var rightHand, leftHand;
 var rotWorldMatrix;
 var yAxis = new THREE.Vector3(0,1,0);
@@ -48,6 +47,7 @@ var xAxis = new THREE.Vector3(1,0,0);
 //var dialogMinWidth = 500;
 var handError, leapError;
 var leftLabel = null, rightLabel = null;
+var interval = 0;
 
 //matrix data
 //var comdata;
@@ -105,9 +105,9 @@ function simReadData() {
 		
 		//now call in the rest of the functions
 		init();
+		initLeap();
 		initErrors();
 		initOculus();
-		initLeap();
 		draw();
 		//now load in listFiles[
 			
@@ -313,6 +313,7 @@ function animate() {
 }  
 */
 
+/*
 function render() { 
 	//try{
 		riftCam.render(scene, camera);
@@ -324,9 +325,9 @@ function render() {
 		crashOther(e);
 	}
 		return false;
-	}*/
+	}
 	return true;
-}
+}/*
 
 
 /*
@@ -491,21 +492,21 @@ function getData2(filename) {
 
 function removeObjects() {
 	//deletes rightObj, leftObj,  rightTransObj, leftTransObj and all their children
-	var obj, i;
+	/*var obj, i;
 	for ( i = scene.children.length - 1; i >= 0 ; i -- ) {
 	    obj = scene.children[ i ];
 	    if ( obj !== ambient && obj !== camera && obj !== point && obj !== handError ) {
 	        scene.remove(obj);
 	    }
-	}
+	}*/
 
-	rightLabel.visible = false;
-	leftLabel.visible = false;
+	//rightLabel.visible = false;
+	//leftLabel.visible = false;
 
 	//scene.remove(rightLabel);
 	//scene.remove(leftLabel);
 
-	/*var i, obj;
+	var i, obj;
 
 	for ( i = rightObj.children.length - 1; i >= 0 ; i -- ) {
 		obj = rightObj.children[ i ];
@@ -523,15 +524,15 @@ function removeObjects() {
 	
 	//scene.remove(rightLabel.name);
 	//scene.remove(leftLabel.name);
-	rightLabel.position.set(0.2, 0.3, -0.5);
-	leftLabel.position.set(-0.2, 0.3, -0.5);
+	//rightLabel.position.set(0.2, 0.3, -0.5);
+	//leftLabel.position.set(-0.2, 0.3, -0.5);
 
 
 	scene.remove(rightTransObj);
 	scene.remove(leftTransObj);
 	scene.remove(leftObj);
 	scene.remove(rightObj);
-	*/
+	
 }
 
 function parseDataToAtoms(data, objectLR) {
@@ -584,6 +585,9 @@ function draw() {
 	console.log("fileName1_draw: " + fileName1);
 	console.log("fileName2_draw: " + fileName2);
 	initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+
+
+
 	//initLabels(0, currentIndex, listFiles.length ,listFiles[0], listFiles[currentIndex]);
 	//var fileName1="data/0x1/5155", fileName2="data/2";
 	getData1(fileName1, fileName2);
@@ -708,7 +712,7 @@ function createTextMaterial(pos, total, filename) {
 	texture.needsUpdate = true;
 	var material = new THREE.MeshBasicMaterial({
 		map : texture,
-		color : "green"//,
+		color : "green",
 		//transparent : true
 	});
 	
@@ -745,26 +749,111 @@ leapController.on( 'deviceDisconnected' , function(){
 });
 */
 
-/*
-function notification(name, hide) {
-	//name is the name of the variable, is a string
-	//If hide is true, plane is hidden, false makes if visible
-	var zPos = 0;
-	if(name = "plane") {
-		zPos = plane.position.z;
-	}
-	
-	camera.traverse( function ( object ) {
-		if(object.z == zPos)
-			object.visible = hide; 
-	} );
-	
-}*/
-leapController.on("gesture", function(gesture){
-			console.log("Gesture Detected!");
-		});
+function render() { 
+
+	var frame = leapController.frame();
+	if (frame.valid && frame.hands.length == 2) {
+		//camera.traverse( function ( object ) { object.visible = false; } );
+		/*
+		if(once == true) {
+			//camera.lookAt(new THREE.Vector3(0,0,0));
+			camera.target.position.copy( leftObj.position );
+			once = false;
+		}
+		*/
+			if(handError.visible)
+				camera.remove(handError);
 		
-var once = true;
+			if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
+				//hands[0] is to the left of hands[1]
+				rightHand = frame.hands[1];
+				leftHand = frame.hands[0];
+			}
+			else {
+				rightHand = frame.hands[0];
+				leftHand = frame.hands[1];
+			}
+			  
+			vRight = rightHand.palmVelocity;
+			vLeft = leftHand.palmVelocity;
+			//console.log(rightObj.position.z);
+			switch(rightHand.pointables.length) {
+				case 1:
+					rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightTransObj, xAxis,  (vRight[1]/50)* Math.PI/180);
+					break;
+				case 3:
+					if(rightObj.position.z < 25)
+						rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
+					if(rightObj.position.z < -250 /*&& once == true*/) {
+						//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
+						//call below when object is zoomed way back
+						currentIndex += 1;
+						//console.log("listFile.length: " + listFiles.length);
+						if(currentIndex == listFiles.length)
+							currentIndex = 0;
+						fileName1 = prefix + listFiles[0];
+						//check below
+						if(simMatrix[0].sortIndices[currentIndex] == 0)
+							currentIndex += 1;
+						fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
+						console.log("currIndex: " + currentIndex);
+						console.log(fileName2);
+						removeObjects();
+						draw();
+					}
+					break;
+				default:
+					rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(rightObj, xAxis,  (-vRight[1]/50)* Math.PI/180);
+					break;
+			}
+			
+			switch(leftHand.pointables.length) {
+				case 1:
+					rotateAroundWorldAxis(leftTransObj, yAxis,  (-vLeft[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
+					break;
+				case 3:
+					if(leftObj.position.z < 25)
+						leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
+					if(leftObj.position.z < -250) {
+						console.log("obj disappear");
+					}
+					break;
+				default:
+					rotateAroundWorldAxis(leftObj, yAxis,  (vLeft[0]/50)* Math.PI/180);
+					rotateAroundWorldAxis(leftObj, xAxis,  (-vLeft[1]/50)* Math.PI/180);
+					break;
+			}
+
+			//spritey.position.set( leftObj.position.x, leftObj.position.y+5, leftObj.position.z  );
+			//spritey.position.set( rightObj.position.x, rightObj.position.y-10, rightObj.position.z-camera.position.z  );
+			//spritey.quaternion.copy( camera.quaternion );
+
+			//spritey.lookAt(camera.position);
+			//console.log(leftObj.position);
+			
+
+		}
+		
+		else {
+			if(!handError.visble)
+				camera.add(handError);
+		} 
+	riftCam.render(scene, camera);
+}
+
+
+function animate() {
+
+	requestAnimationFrame( animate );
+
+	render();
+	stats.update();
+}
+
+
 function leapLoop() {
 	
 	var vRight, vLeft;
@@ -775,23 +864,26 @@ function leapLoop() {
 	rightTransObj.add(rightObj);
 	//Delete bottom if performance hit
 	onResize();
-	
-	
-	Leap.loop({enableGestures: true}, function(frame) {
-		//stats.update();
+	animate();
+	/*if(interval  != 0)
+		clearInterval(interval);
+
+	interval  = setInterval(function(){	
+		leftLabel.visible = false;
+		rightLabel.visible = false;
+	}, 5000);*/
+
+	/*Leap.loop(function(frame) {
+		    //stats.begin();
+    	stats.update();
 		render();
-		//onResize();
-		stats.update();
-		leapController.on('deviceDisconnected', function() {
-			//$("#title").append('<div id="errorLeapConnect"><center><font color="red"> Error: Please connect a Leap Motion Controller </font></center></div>');
-			//////////////camera.remove(leapError);
-		});
+		
 		
 		/*leapController.on( 'deviceDisconnected' , function(){
 
 			  //console.log( 'disconnect.' );
 				camera.add(leapError);
-		});*/
+		});
 		
 		//Leap is connected, remove the error
 		//$( "#twoHandsError" ).dialog( "close" );
@@ -804,7 +896,7 @@ function leapLoop() {
 			camera.target.position.copy( leftObj.position );
 			once = false;
 		}
-		*/
+		
 			if(handError.visible)
 				camera.remove(handError);
 		
@@ -854,7 +946,6 @@ function leapLoop() {
 			}
 			
 			switch(leftHand.pointables.length) {
-				//spritey.position.set(0,0,0);
 				case 1:
 					rotateAroundWorldAxis(leftTransObj, yAxis,  (-vLeft[0]/50)* Math.PI/180);
 					rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
@@ -883,12 +974,14 @@ function leapLoop() {
 		}
 		
 		else {
-		if(!handError.visble)
-			camera.add(handError);
+			if(!handError.visble)
+				camera.add(handError);
 		}
 	//camera.updateProjectionMatrix();
 	//camera.lookAt(scene.position);
-	});	
+	
+	 //stats.end();
+	});	*/
 	
 }
 	
