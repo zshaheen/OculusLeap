@@ -59,6 +59,10 @@ var currentIndex=0;
 var listFiles; //List of files in a specific directory
 var prefix;
 
+//delete soon
+var textureL, textureR;
+
+
 window.onload = function() {
 	/*init();
 	initErrors();
@@ -72,6 +76,11 @@ window.onload = function() {
 
 
 function simReadData() {
+
+
+	
+
+
 	var dirs; // List of directories. ex: 0x1, 0x2, etc.
 	
 	var comdata = [];
@@ -106,6 +115,7 @@ function simReadData() {
 		
 		//now call in the rest of the functions
 		init();
+		//initLabels();
 		initLeap();
 		initErrors();
 		initOculus();
@@ -205,7 +215,7 @@ function euclideanDistance(v1, v2) {
 function init() {
 
 	window.addEventListener('resize', onResize, false);
-	
+
 	scene = new THREE.Scene();
 	
 	aspectRatio = window.innerWidth / window.innerHeight;
@@ -445,33 +455,6 @@ function cylinderBetweenPoints(vstart, vend) {
 }
 
 
-function getData1(filename1, filename2) {
-	var get1 = $.get(filename1, function(data) {
-		// split the data by line
-		objRawData1 = data.split("\n");
-	});
-	get1.success(getData2(filename2));
-}
-
-
-function getData2(filename) {
-	var get2 = $.get(filename, function(data) {
-		// split the data by line
-		objRawData2 = data.split("\n");
-	});
-	get2.success(function() {
-		//draw the molecules
-		parseDataToAtoms(objRawData1, leftObj);
-		parseDataToAtoms(objRawData2, rightObj);
-		
-		leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
-		rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
-
-		leapLoop();
-	});
-}
-
-
 function removeObjects() {
 	//deletes rightObj, leftObj,  rightTransObj, leftTransObj and all their children
 	/*var obj, i;
@@ -503,12 +486,6 @@ function removeObjects() {
 	//leftLabel.position.set(100,100,100);
 	
 	//rightLabel.remove(rightLabel.children[0]);
-	
-	//scene.remove(rightLabel.name);
-	//scene.remove(leftLabel.name);
-	//rightLabel.position.set(0.2, 0.3, -0.5);
-	//leftLabel.position.set(-0.2, 0.3, -0.5);
-
 
 	scene.remove(rightTransObj);
 	scene.remove(leftTransObj);
@@ -553,7 +530,7 @@ function drawObject(filename, object, isLeft){
 //loads an object with the corresponding filename to the object
 
 	//Delete the object and all of its children
-	var obj;
+	var obj, canvas = null, texture = null;
 	if(object.children.length > 1) { //or 0?
 		for (var i = object.children.length - 1; i >= 0 ; i -- ) {
 			obj = object.children[ i ];
@@ -578,42 +555,62 @@ function drawObject(filename, object, isLeft){
 		object.position = new THREE.Vector3(-10,0,-camera.position.z);
 		leftTransObj.add(object);
 
+		var leftIndex = 0;
+		//canvas = createTextMaterial(leftIndex, listFiles.length-1, filename);
+		//texture = new THREE.Texture(canvas);
+		//texture = THREE.Texture('textures/nohands.gif');
+		//leftLabel.material.map = THREE.ImageUtils.loadTexture( texture );
+		//leftLabel.material.needsUpdate = true;
+
 		//edit hte labels
 		//if(leftLabel.visible)
-		//	leftLabel.visible = false;
+			//leftLabel.visible = false;
+		//clearTimeout(interval);
 		//TODO remove bottom
-		var leftIndex = 0;
+		/*var leftIndex = 0;
 		leftLabel = createTextMaterial(leftIndex, listFiles.length-1, filename);
 		leftLabel.position.set(-0.2, 0.25, -0.5);
 		leftLabel.lookAt(new THREE.Vector3(0,0,1) );
 		scene.add(leftLabel);
 		camera.add(leftLabel);
-		rightLabel.visible = true;
+		rightLabel.visible = true;*/
 
 	}
 	else {
 		object.position = new THREE.Vector3(10,0,-camera.position.z);
 		rightTransObj.add(object);
 
+		//draw a new texture and add it to the labels
+		//canvas = createTextCanvas(currentIndex, listFiles.length-1, filename);//createTextCanvas(text, 'black', 'Arial', 0.0000001);
+		//texture = new THREE.Texture(canvas);
+		//texture = THREE.Texture('textures/noleap.png');
+		//rightLabel.material.map = new THREE.ImageUtils.loadTexture( textureR );
+		//rightLabel.material.map.needsUpdate = true;
+
 		//edit hte labels
 		//if(rightLabel.visible)
-		///	rightLabel.visible = false;
+			//rightLabel.visible = false;
 		//rightLabel.dispose();
-		rightLabel = createTextMaterial(currentIndex, listFiles.length-1, filename);
+		//clearTimeout(interval);
+		/*rightLabel = createTextMaterial(currentIndex, listFiles.length-1, filename);
 		rightLabel.position.set(0.2, 0.25, -0.5);
 		rightLabel.lookAt(new THREE.Vector3(0,0,1) );
 		scene.add(rightLabel);
 		camera.add(rightLabel);
-		leftLabel.visible = true;
+		leftLabel.visible = true;*/
 	}
+	//Draw both of the labels and have them disapper after 5 seconds
+
 
 	//if(interval  != 0)
 		//clearInterval(interval);
 
-	interval  = setInterval(function(){	
-		leftLabel.visible = false;
-		rightLabel.visible = false;
-	}, 5000);
+	/*interval  = setTimeout(function(){
+		if(this.leftLabel.visible) {
+			this.leftLabel.visible = false;
+			this.rightLabel.visible = false;
+		}
+	}, 5000);*/
 
 	});
 }
@@ -636,6 +633,7 @@ function draw() {
 	console.log("fileName1_draw: " + fileName1);
 	console.log("fileName2_draw: " + fileName2);
 	//initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+
 
 
 
@@ -680,7 +678,45 @@ function initErrors() {
 }
 
 
-function initLabels(posL, posR, total, filenameLeft, filenameRight ){
+function initLabels() {
+	//create left and right planes at the correct position with a blank texture
+
+	var geometry = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
+	//var texture = new THREE.Texture('textures/transparent.png');
+	var canvas = createTextCanvas(0, 0, "data/0x1/0000");
+	var texture = new THREE.Texture(canvas);
+	texture.needsUpdate = true;
+
+	var material = new THREE.MeshBasicMaterial({
+		map : texture,
+		color : "green"
+		//transparent : true
+	});
+
+	leftLabel = new THREE.Mesh(geometry, material);
+	rightLabel = new THREE.Mesh(geometry, material);
+
+	
+
+	//leftLabel = createTextMaterial(0, 0, "data/0x1/0000");
+	//rightLabel = createTextMaterial(0, 0, "data/0x1/0000");
+
+	leftLabel.position.set(-0.2, 0.25, -0.5);
+	leftLabel.lookAt(new THREE.Vector3(0,0,1) );
+	scene.add(leftLabel);
+	camera.add(leftLabel);
+
+	rightLabel.position.set(0.2, 0.25, -0.5);
+	rightLabel.lookAt(new THREE.Vector3(0,0,1) );
+	scene.add(rightLabel);
+	camera.add(rightLabel);
+
+
+}
+
+
+
+function drawLabels(posL, posR, total, filenameLeft, filenameRight ){
 
 	//var labelGeo = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
 
@@ -701,9 +737,17 @@ function initLabels(posL, posR, total, filenameLeft, filenameRight ){
 	rightLabel.lookAt(new THREE.Vector3(0,0,1) );
 	scene.add(rightLabel);
 	camera.add(rightLabel);
+
+	interval  = setTimeout(function(){
+		if(leftLabel.visible) {
+			leftLabel.visible = false;
+			rightLabel.visible = false;
+		}
+	}, 5000);
 }
 
-//function createTextCanvas(text, color, font, size) {
+
+
 function createTextCanvas(pos, total, filename) {
 
 	var position = " "+ pos + "/" + total;
@@ -734,7 +778,7 @@ function createTextMaterial(pos, total, filename) {
 
 	//applies the text to the geometry
 	console.log(filename);
-	var canvas = createTextCanvas(pos, total, filename);//createTextCanvas(text, 'black', 'Arial', 0.0000001);
+	var canvas = createTextCanvas(pos, total, filename);
 	var texture = new THREE.Texture(canvas);
 	var labelGeo = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
 	texture.needsUpdate = true;
@@ -821,9 +865,26 @@ function render() {
 					console.log("currIndex: " + currentIndex);
 					console.log(fileName2);
 					//removeObjects();
-					//draw();
+					rightLabel.visible = false;
+					leftLabel.visible = false;
 					drawObject(fileName2, rightObj, false);
-					//initLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+					//draw the canvas..
+					//0 should be currIndex_L
+					drawLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+					/*
+					var geometry = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
+					var canvas1 = createTextCanvas(1, 1, "data/0x1/1111");//createTextMaterial(currentIndex, listFiles.length-1, fileName2);
+					var texture1 = new THREE.Texture(canvas1);
+					rightLabel.material.map = THREE.ImageUtils.loadTexture(texture1);
+					//rightLabel.material.map = THREE.ImageUtils.loadTexture('textures/nohands.gif');
+					rightLabel.material.needsUpdate = true;
+					//rightLabel.material.map = THREE.ImageUtils.loadTexture(this.texture1);
+					/*var material = new THREE.MeshBasicMaterial({
+						map : texture1,
+						color : "green"
+						//transparent : true
+					});
+					rightLabel = new THREE.Mesh(geometry, material);*/
 				}
 				break;
 			default:
@@ -877,10 +938,12 @@ function leapLoop() {
 	
 	leftTransObj.add(leftObj);
 	rightTransObj.add(rightObj);
+	drawLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
 	//Delete bottom if performance hit
-	onResize();
+	//onResize();
 	
 	animate();
+
 }
 	
 
