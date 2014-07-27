@@ -55,7 +55,7 @@ var interval = 0;
 var simMatrix;
 var fileName1, fileName2;
 var objRawData;
-var currentIndex=0;
+var rightCurrentIndex=0, leftCurrentIndex = 0;
 var listFiles; //List of files in a specific directory
 var prefix;
 
@@ -106,12 +106,12 @@ function simReadData() {
 	
 	get.success(function() {
 		simCreateMatrix(comdata, listFiles.length);
-		console.log(simMatrix[0].sortIndices );
+		//console.log(simMatrix[0].sortIndices );
 		//set fileName1 and fileName2
 		//Fix this so that threr aren't any repeats
-		currentIndex += 1;
-		fileName1 = prefix + listFiles[0];
-		fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
+		rightCurrentIndex += 1;
+		fileName1 = prefix + listFiles[leftCurrentIndex];
+		fileName2 = prefix + listFiles[ simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex] ];
 		
 		//now call in the rest of the functions
 		init();
@@ -150,15 +150,17 @@ function simCreateMatrix(comdata, size) {
 		simMatrix.push(temp1dArray);
 	}
 	
+	//display the raw euclidean distances in simMatrix
 	/*
 	for(var i=0; i<size; i++) {
 		for(var j=0; j<size; j++) {
 			//if(i == 0)
-				console.log(comdata[i] + " & " + comdata[j]);
-			//console.log( i + ", " + j + ": " + simMatrix[i][j] );
+				//console.log(comdata[i] + " & " + comdata[j]);
+			console.log( i + ", " + j + ": " + simMatrix[i][j] );
 		}
 	}
 	*/
+	
 	
 	//now sort the arrays based on size, 
 	/* Looking in folder 0x1
@@ -178,7 +180,7 @@ function simCreateMatrix(comdata, size) {
 		//console.log(simMatrix[i]);
 		sortWithIndeces(simMatrix[i]);
 		//console.log(simMatrix[i]);
-		//console.log(simMatrix[i].sortIndices);
+		console.log(simMatrix[i].sortIndices);
 	}
 	
 	//Now save simMatrix into a file:
@@ -494,7 +496,7 @@ function removeObjects() {
 	
 }
 
-function parseDataToAtoms(data, objectLR) {
+function parseDataToAtoms(data, object) {
 	var numberOfAtoms = parseInt(data[1]);
 		
 	// create the array to hold the parsed data
@@ -521,7 +523,7 @@ function parseDataToAtoms(data, objectLR) {
 	}
 	
 	var atomCenter = avgPos(atoms, numberOfAtoms);
-	drawMolecule(atoms, numberOfAtoms, atomCenter, objectLR);
+	drawMolecule(atoms, numberOfAtoms, atomCenter, object);
 	
 }
 
@@ -555,7 +557,7 @@ function drawObject(filename, object, isLeft){
 		object.position = new THREE.Vector3(-10,0,-camera.position.z);
 		leftTransObj.add(object);
 
-		var leftIndex = 0;
+		//var leftIndex = 0;
 		//canvas = createTextMaterial(leftIndex, listFiles.length-1, filename);
 		//texture = new THREE.Texture(canvas);
 		//texture = THREE.Texture('textures/nohands.gif');
@@ -693,13 +695,10 @@ function initLabels() {
 		//transparent : true
 	});
 
+
 	leftLabel = new THREE.Mesh(geometry, material);
 	rightLabel = new THREE.Mesh(geometry, material);
 
-	
-
-	//leftLabel = createTextMaterial(0, 0, "data/0x1/0000");
-	//rightLabel = createTextMaterial(0, 0, "data/0x1/0000");
 
 	leftLabel.position.set(-0.2, 0.25, -0.5);
 	leftLabel.lookAt(new THREE.Vector3(0,0,1) );
@@ -738,11 +737,12 @@ function drawLabels(posL, posR, total, filenameLeft, filenameRight ){
 	scene.add(rightLabel);
 	camera.add(rightLabel);
 
+	clearTimeout(interval);
 	interval  = setTimeout(function(){
-		if(leftLabel.visible) {
+		//if(leftLabel.visible) {
 			leftLabel.visible = false;
 			rightLabel.visible = false;
-		}
+		//}
 	}, 5000);
 }
 
@@ -853,24 +853,24 @@ function render() {
 				if(rightObj.position.z < -250 /*&& once == true*/) {
 					//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
 					//call below when object is zoomed way back
-					currentIndex += 1;
-					//console.log("listFile.length: " + listFiles.length);
-					if(currentIndex == listFiles.length)
-						currentIndex = 0;
-					fileName1 = prefix + listFiles[0];
+					rightCurrentIndex += 1;
+					if(rightCurrentIndex == listFiles.length)
+						rightCurrentIndex = 0;
+					fileName1 = prefix + listFiles[leftCurrentIndex];
 					//check below
-					if(simMatrix[0].sortIndices[currentIndex] == 0)
-						currentIndex += 1;
-					fileName2 = prefix + listFiles[ simMatrix[0].sortIndices[currentIndex] ];
-					console.log("currIndex: " + currentIndex);
-					console.log(fileName2);
+					if(simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex] == 0)
+						rightCurrentIndex += 1;
+
+					fileName2 = prefix + listFiles[ simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex] ];
+					console.log("rightCurrentIndex: " + rightCurrentIndex);
 					//removeObjects();
 					rightLabel.visible = false;
 					leftLabel.visible = false;
 					drawObject(fileName2, rightObj, false);
-					//draw the canvas..
+					//draw the canvas.. 	
 					//0 should be currIndex_L
-					drawLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+					//drawLabels(leftCurrentIndex, rightCurrentIndex, listFiles.length-1 ,fileName1, fileName2);
+					drawLabels(/*simMatrix[rightCurrentIndex].sortIndices[rightCurrentIndex]*/ leftCurrentIndex, /*rightCurrentIndex*/simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex], listFiles.length-1 ,fileName1, fileName2);
 					/*
 					var geometry = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
 					var canvas1 = createTextCanvas(1, 1, "data/0x1/1111");//createTextMaterial(currentIndex, listFiles.length-1, fileName2);
@@ -901,8 +901,42 @@ function render() {
 			case 3:
 				if(leftObj.position.z < 25)
 					leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
-				if(leftObj.position.z < -250) {
-					console.log("obj disappear");
+				if(leftObj.position.z < -150 /*&& once == true*/) {
+					//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
+					//call below when object is zoomed way back
+					leftCurrentIndex += 1;
+					if(leftCurrentIndex == listFiles.length)
+						leftCurrentIndex = 0;
+					fileName2 = prefix + listFiles[rightCurrentIndex];
+					//check below
+					if(simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex] == 0)
+						leftCurrentIndex += 1;
+
+					fileName1 = prefix + listFiles[ simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex] ];
+					console.log("leftCurrentIndex: " + leftCurrentIndex);
+					//removeObjects();
+					rightLabel.visible = false;
+					leftLabel.visible = false;
+					drawObject(fileName1, leftObj, true);
+					//draw the canvas..
+					//0 should be currIndex_L
+					//drawLabels(leftCurrentIndex, /*rightCurrentIndex*/simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex] , listFiles.length-1 ,fileName1, fileName2);
+					drawLabels(simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex], /*rightCurrentIndex*/rightCurrentIndex, listFiles.length-1 ,fileName1, fileName2);
+					
+					/*
+					var geometry = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
+					var canvas1 = createTextCanvas(1, 1, "data/0x1/1111");//createTextMaterial(currentIndex, listFiles.length-1, fileName2);
+					var texture1 = new THREE.Texture(canvas1);
+					rightLabel.material.map = THREE.ImageUtils.loadTexture(texture1);
+					//rightLabel.material.map = THREE.ImageUtils.loadTexture('textures/nohands.gif');
+					rightLabel.material.needsUpdate = true;
+					//rightLabel.material.map = THREE.ImageUtils.loadTexture(this.texture1);
+					/*var material = new THREE.MeshBasicMaterial({
+						map : texture1,
+						color : "green"
+						//transparent : true
+					});
+					rightLabel = new THREE.Mesh(geometry, material);*/
 				}
 				break;
 			default:
@@ -938,9 +972,10 @@ function leapLoop() {
 	
 	leftTransObj.add(leftObj);
 	rightTransObj.add(rightObj);
-	drawLabels(0, currentIndex, listFiles.length-1 ,fileName1, fileName2);
+	//
+	drawLabels(leftCurrentIndex, rightCurrentIndex, listFiles.length-1 ,fileName1, fileName2);
 	//Delete bottom if performance hit
-	//onResize();
+	onResize();
 	
 	animate();
 
