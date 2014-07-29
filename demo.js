@@ -43,8 +43,6 @@ var yAxis = new THREE.Vector3(0,1,0);
 var xAxis = new THREE.Vector3(1,0,0);
 	
 //Error Dialog variables
-//var dialogMinHeight = 200;
-//var dialogMinWidth = 500;
 var handError, leapError;
 var leftLabel = null, rightLabel = null;
 var interval = 0;
@@ -58,9 +56,7 @@ var objRawData;
 var rightCurrentIndex=0, leftCurrentIndex = 0;
 var listFiles; //List of files in a specific directory
 var prefix;
-
-//delete soon
-var textureL, textureR;
+var lastHand="right", simMatrixRow = 0, simMatrixCol = 1;
 
 
 window.onload = function() {
@@ -509,8 +505,6 @@ function parseDataToAtoms(data, object) {
 		//now atoms is a two dimensional array
 	}
 
-	//atoms[i][0] is the type of atom (O,C,H, etc)
-	//atoms[i][1], atoms[i][2], atoms[i][3], are the x,y,z of the atom respectively
 	for (var i = 0; i < numberOfAtoms; i++) {
 		var next = i+2; // skip COM and number of points in file
 		var line = data[next].split(" ");
@@ -557,62 +551,12 @@ function drawObject(filename, object, isLeft){
 		object.position = new THREE.Vector3(-10,0,-camera.position.z);
 		leftTransObj.add(object);
 
-		//var leftIndex = 0;
-		//canvas = createTextMaterial(leftIndex, listFiles.length-1, filename);
-		//texture = new THREE.Texture(canvas);
-		//texture = THREE.Texture('textures/nohands.gif');
-		//leftLabel.material.map = THREE.ImageUtils.loadTexture( texture );
-		//leftLabel.material.needsUpdate = true;
-
-		//edit hte labels
-		//if(leftLabel.visible)
-			//leftLabel.visible = false;
-		//clearTimeout(interval);
-		//TODO remove bottom
-		/*var leftIndex = 0;
-		leftLabel = createTextMaterial(leftIndex, listFiles.length-1, filename);
-		leftLabel.position.set(-0.2, 0.25, -0.5);
-		leftLabel.lookAt(new THREE.Vector3(0,0,1) );
-		scene.add(leftLabel);
-		camera.add(leftLabel);
-		rightLabel.visible = true;*/
-
 	}
 	else {
 		object.position = new THREE.Vector3(10,0,-camera.position.z);
 		rightTransObj.add(object);
 
-		//draw a new texture and add it to the labels
-		//canvas = createTextCanvas(currentIndex, listFiles.length-1, filename);//createTextCanvas(text, 'black', 'Arial', 0.0000001);
-		//texture = new THREE.Texture(canvas);
-		//texture = THREE.Texture('textures/noleap.png');
-		//rightLabel.material.map = new THREE.ImageUtils.loadTexture( textureR );
-		//rightLabel.material.map.needsUpdate = true;
-
-		//edit hte labels
-		//if(rightLabel.visible)
-			//rightLabel.visible = false;
-		//rightLabel.dispose();
-		//clearTimeout(interval);
-		/*rightLabel = createTextMaterial(currentIndex, listFiles.length-1, filename);
-		rightLabel.position.set(0.2, 0.25, -0.5);
-		rightLabel.lookAt(new THREE.Vector3(0,0,1) );
-		scene.add(rightLabel);
-		camera.add(rightLabel);
-		leftLabel.visible = true;*/
 	}
-	//Draw both of the labels and have them disapper after 5 seconds
-
-
-	//if(interval  != 0)
-		//clearInterval(interval);
-
-	/*interval  = setTimeout(function(){
-		if(this.leftLabel.visible) {
-			this.leftLabel.visible = false;
-			this.rightLabel.visible = false;
-		}
-	}, 5000);*/
 
 	});
 }
@@ -737,13 +681,13 @@ function drawLabels(posL, posR, total, filenameLeft, filenameRight ){
 	scene.add(rightLabel);
 	camera.add(rightLabel);
 
-	clearTimeout(interval);
+	/*clearTimeout(interval);
 	interval  = setTimeout(function(){
 		//if(leftLabel.visible) {
 			leftLabel.visible = false;
 			rightLabel.visible = false;
 		//}
-	}, 5000);
+	}, 5000);*/
 }
 
 
@@ -798,28 +742,90 @@ function initLeap() {
 	leapController.connect();
 }
 
+
 /*
-leapController.on( 'connect' , function(){
+function render() { 
 
-		console.log( 'connect' );
-		//if(leapError.visble)
-			//camera.remove(leapError);
+	var frame = leapController.frame();
+	if (frame.valid && frame.hands.length == 2) {
 
-});
-leapController.on( 'deviceConnected' , function(){
+		if(handError.visible)
+			camera.remove(handError);
+	
+		if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
+			//hands[0] is to the left of hands[1]
+			rightHand = frame.hands[1];
+			leftHand = frame.hands[0];
+		}
+		else {
+			rightHand = frame.hands[0];
+			leftHand = frame.hands[1];
+		}
+		  
+		vRight = rightHand.palmVelocity;
+		vLeft = leftHand.palmVelocity;
 
-		console.log( 'deviceConnected.' );
-		//if(leapError.visble)
-			camera.remove(leapError);
+				if(rightObj.position.z < 25)
+					rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
+				if(rightObj.position.z < -150 ) {
+					
+					if(lastHand == "left") {
+						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
+						simMatrixCol = 0;
+					}
+					lastHand = "right";
 
-});
+					simMatrixCol += 1;
+					if(simMatrixCol == listFiles.length) 
+						simMatrixCol = 1;
 
-leapController.on( 'deviceDisconnected' , function(){
+					fileName2 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
+					console.log("filename1 " + fileName1);
+					console.log("filename2 " + fileName2);
+					drawObject(fileName2, rightObj, false);
 
-		console.log( 'disconnect.' );
-		camera.add(leapError);
-});
-*/
+					rightLabel.visible = false;
+					leftLabel.visible = false;
+					drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
+				}
+		
+
+				if(leftObj.position.z < 25)
+					leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
+				if(leftObj.position.z < -150 ) {
+					
+					if(lastHand == "right") {
+						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
+						simMatrixCol = 0;
+					}
+					lastHand = "left";
+
+					simMatrixCol += 1;
+					if(simMatrixCol == listFiles.length) 
+						simMatrixCol = 1;
+
+					fileName1 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
+					console.log("filename1 " + fileName1);
+					console.log("filename2 " + fileName2);
+					drawObject(fileName1, leftObj, true);
+
+					rightLabel.visible = false;
+					leftLabel.visible = false;
+					drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
+					
+				}
+
+
+	}
+	
+	else {
+		if(!handError.visble)
+			camera.add(handError);
+	} 
+	riftCam.render(scene, camera);
+}*/
+
+
 
 function render() { 
 
@@ -850,42 +856,30 @@ function render() {
 			case 3:
 				if(rightObj.position.z < 25)
 					rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
-				if(rightObj.position.z < -250 /*&& once == true*/) {
-					//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
-					//call below when object is zoomed way back
-					rightCurrentIndex += 1;
-					if(rightCurrentIndex == listFiles.length)
-						rightCurrentIndex = 0;
-					fileName1 = prefix + listFiles[leftCurrentIndex];
-					//check below
-					if(simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex] == 0)
-						rightCurrentIndex += 1;
+				if(rightObj.position.z < -150 ) {
+					
+					if(lastHand == "left") {
+						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
+						simMatrixCol = 0;
+					}
+					lastHand = "right";
 
-					fileName2 = prefix + listFiles[ simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex] ];
-					console.log("rightCurrentIndex: " + rightCurrentIndex);
-					//removeObjects();
+					simMatrixCol += 1;
+					if(simMatrixCol == listFiles.length) 
+						simMatrixCol = 1;
+
+					fileName2 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
+					console.log("filename1 " + fileName1);
+					console.log("filename2 " + fileName2);
+					drawObject(fileName2, rightObj, false);
+
 					rightLabel.visible = false;
 					leftLabel.visible = false;
-					drawObject(fileName2, rightObj, false);
-					//draw the canvas.. 	
-					//0 should be currIndex_L
-					//drawLabels(leftCurrentIndex, rightCurrentIndex, listFiles.length-1 ,fileName1, fileName2);
-					drawLabels(/*simMatrix[rightCurrentIndex].sortIndices[rightCurrentIndex]*/ leftCurrentIndex, /*rightCurrentIndex*/simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex], listFiles.length-1 ,fileName1, fileName2);
-					/*
-					var geometry = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
-					var canvas1 = createTextCanvas(1, 1, "data/0x1/1111");//createTextMaterial(currentIndex, listFiles.length-1, fileName2);
-					var texture1 = new THREE.Texture(canvas1);
-					rightLabel.material.map = THREE.ImageUtils.loadTexture(texture1);
-					//rightLabel.material.map = THREE.ImageUtils.loadTexture('textures/nohands.gif');
-					rightLabel.material.needsUpdate = true;
-					//rightLabel.material.map = THREE.ImageUtils.loadTexture(this.texture1);
-					/*var material = new THREE.MeshBasicMaterial({
-						map : texture1,
-						color : "green"
-						//transparent : true
-					});
-					rightLabel = new THREE.Mesh(geometry, material);*/
+					drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 				}
+		
+
+				
 				break;
 			default:
 				rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
@@ -901,43 +895,29 @@ function render() {
 			case 3:
 				if(leftObj.position.z < 25)
 					leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
-				if(leftObj.position.z < -150 /*&& once == true*/) {
-					//NOTE: simMatrix[0] should be simMatrix[indexOfOtherHand]
-					//call below when object is zoomed way back
-					leftCurrentIndex += 1;
-					if(leftCurrentIndex == listFiles.length)
-						leftCurrentIndex = 0;
-					fileName2 = prefix + listFiles[rightCurrentIndex];
-					//check below
-					if(simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex] == 0)
-						leftCurrentIndex += 1;
+				if(leftObj.position.z < -150 ) {
+					
+					if(lastHand == "right") {
+						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
+						simMatrixCol = 0;
+					}
+					lastHand = "left";
 
-					fileName1 = prefix + listFiles[ simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex] ];
-					console.log("leftCurrentIndex: " + leftCurrentIndex);
-					//removeObjects();
+					simMatrixCol += 1;
+					if(simMatrixCol == listFiles.length) 
+						simMatrixCol = 1;
+
+					fileName1 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
+					console.log("filename1 " + fileName1);
+					console.log("filename2 " + fileName2);
+					drawObject(fileName1, leftObj, true);
+
 					rightLabel.visible = false;
 					leftLabel.visible = false;
-					drawObject(fileName1, leftObj, true);
-					//draw the canvas..
-					//0 should be currIndex_L
-					//drawLabels(leftCurrentIndex, /*rightCurrentIndex*/simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex] , listFiles.length-1 ,fileName1, fileName2);
-					drawLabels(simMatrix[rightCurrentIndex].sortIndices[leftCurrentIndex], /*rightCurrentIndex*/rightCurrentIndex, listFiles.length-1 ,fileName1, fileName2);
+					drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 					
-					/*
-					var geometry = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
-					var canvas1 = createTextCanvas(1, 1, "data/0x1/1111");//createTextMaterial(currentIndex, listFiles.length-1, fileName2);
-					var texture1 = new THREE.Texture(canvas1);
-					rightLabel.material.map = THREE.ImageUtils.loadTexture(texture1);
-					//rightLabel.material.map = THREE.ImageUtils.loadTexture('textures/nohands.gif');
-					rightLabel.material.needsUpdate = true;
-					//rightLabel.material.map = THREE.ImageUtils.loadTexture(this.texture1);
-					/*var material = new THREE.MeshBasicMaterial({
-						map : texture1,
-						color : "green"
-						//transparent : true
-					});
-					rightLabel = new THREE.Mesh(geometry, material);*/
 				}
+
 				break;
 			default:
 				rotateAroundWorldAxis(leftObj, yAxis,  (vLeft[0]/50)* Math.PI/180);
@@ -952,6 +932,18 @@ function render() {
 			camera.add(handError);
 	} 
 	riftCam.render(scene, camera);
+}
+
+
+
+function getIndex(string) {
+	for(var i=0; i<listFiles.length; i++) {
+		if(listFiles[i] == string)
+			return i;
+	}
+	//will break the code
+	return -1;
+
 }
 
 
@@ -973,7 +965,7 @@ function leapLoop() {
 	leftTransObj.add(leftObj);
 	rightTransObj.add(rightObj);
 	//
-	drawLabels(leftCurrentIndex, rightCurrentIndex, listFiles.length-1 ,fileName1, fileName2);
+	drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 	//Delete bottom if performance hit
 	onResize();
 	
