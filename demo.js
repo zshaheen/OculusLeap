@@ -3,6 +3,7 @@ var renderer, camera, scene, element;
 var ambient, point;
 var aspectRatio;
 var stats;
+var gui, menu;
 
 //Oculus Bridge variables 
 var riftCam, oculusBridge;
@@ -57,6 +58,7 @@ var rightCurrentIndex=0, leftCurrentIndex = 0;
 var listFiles; //List of files in a specific directory
 var prefix;
 var lastHand="right", simMatrixRow = 0, simMatrixCol = 1;
+var listOfFolders=[], listOfFilesInFolder=[];
 
 
 window.onload = function() {
@@ -67,9 +69,145 @@ window.onload = function() {
 	draw();*/
 	//leapLoop();
 	
-	simReadData();
+	//create the gui and send an ajax request to get a list of folders in the directory
+
+	var dir = "data"
+	ajaxRequestFolders(dir);
+
+	
 }
 
+function menu() {
+	this.folder = "";
+	this.leftMolecule = "";
+	this.rightMolecule = "";
+}
+
+function ajaxRequestFolders(dir) {
+	$.ajax({
+
+		type: "POST",
+
+		url: "getFilesInDir.php?dir=" + dir + "%2F",
+
+		dataType: "json",
+
+		success: function(data) {
+
+			listOfFolders = data.split("NF");
+			//delete the last index which is just ""
+			listOfFolders.splice(listOfFolders.length-1, 1);
+			//add a "" in the first index
+			listOfFolders.unshift("");
+			console.log(listOfFolders);
+			initMenu();
+
+		}
+
+	});
+}
+
+
+function ajaxRequestFiles(dir) {
+	$.ajax({
+
+		type: "POST",
+
+		url: "getFilesInDir.php?dir=" + dir + "%2F",
+
+		dataType: "json",
+
+		success: function(data) {
+
+			//gui.__controllers[2].remove();
+			//gui.__controllers[1].remove();
+
+			//console.log("ajaxRequestFILES success");
+			listOfFilesInFolder = data.split("NF");
+			//console.log("data.split working");
+			//delete the last index which is just ""
+			listOfFilesInFolder.splice(listOfFilesInFolder.length-1, 1);
+			//add a "" in the first index
+			//listOfFilesInFolder.unshift("");
+			console.log(listOfFilesInFolder);
+			
+			for (var i in gui.__controllers) {
+			    gui.__controllers[i].updateDisplay();
+			}
+
+			
+			gui.__controllers[2].remove();
+			console.log("remove[2]");
+			gui.__controllers[1].remove();
+			console.log("remove[1]");
+
+			//if(gui.__controllers.length == 1) {
+				gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").onFinishChange(function(newValue){
+					if(newValue != "") {
+
+					}
+				    //On select, have load molecule or something...
+				    //On select, have load molecule or something...
+				    //On select, have load molecule or something...
+				    //On select, have load molecule or something...
+				});
+
+				gui.add(menu, "rightMolecule", listOfFilesInFolder).name("Right Molecule").onFinishChange(function(newValue){
+					if(newValue != "") {
+						
+					}
+				    //On select, have load molecule or something...
+				    //On select, have load molecule or something...
+				    //On select, have load molecule or something...
+				    //On select, have load molecule or something...
+				}); 
+
+				simReadData();
+			}
+		//}
+
+	});
+}
+
+function updateGUI(newValue) {
+
+	//clean Left Molecule and Right Molecule options in menu
+
+	prefix = "data/" + newValue +"/";
+	console.log("updateGUI called: "+newValue);
+	
+	ajaxRequestFiles(prefix);
+	
+	
+}
+
+function initMenu() {
+	gui = new dat.GUI();
+	menu = new menu();
+	//gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(updateGUI(newValue));
+	gui.add(menu, "folder", listOfFolders).name("Choose a folder").listen().onFinishChange(function(newValue){
+		if(newValue != "") {
+			updateGUI(newValue);
+			
+		}
+			
+	});
+
+	//gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").listen();//.onFinishChange(function(newValue){
+	gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").listen().onFinishChange(function(newValue){
+	    //On select, have load molecule or something...
+	    //On select, have load molecule or something...
+	    //On select, have load molecule or something...
+	    //On select, have load molecule or something...
+	});
+
+	gui.add(menu, "rightMolecule", listOfFilesInFolder).name("Right Molecule").listen().onFinishChange(function(newValue){
+	    //On select, have load molecule or something...
+	    //On select, have load molecule or something...
+	    //On select, have load molecule or something...
+	    //On select, have load molecule or something...
+	});
+}
 
 function simReadData() {
 
@@ -77,16 +215,19 @@ function simReadData() {
 	
 
 
-	var dirs; // List of directories. ex: 0x1, 0x2, etc.
+	//var dirs; // List of directories. ex: 0x1, 0x2, etc.
 	
 	var comdata = [];
 	var tempData, line;
+
 	
-	dirs = ["0x1","0x2"];
+	//dirs = ["0x1","0x2"];
 	//assuming we opened the folder 0x1
-	listFiles = ["5155", "6288", "6465", "7067", "7392", "7861", "9996"];
-	
-	prefix = "data/" + dirs[0]+"/";
+	//listFiles = ["5155", "6288", "6465", "7067", "7392", "7861", "9996"];
+	listFiles = listOfFilesInFolder;
+	console.log	
+
+	//prefix = "data/" + dirs[0]+"/";
 
 	var comdata = [];
 	for(var i=0; i<listFiles.length; i++) {
@@ -111,7 +252,7 @@ function simReadData() {
 		
 		//now call in the rest of the functions
 		init();
-		//initLabels();
+		//initLabels();;
 		initLeap();
 		initErrors();
 		initOculus();
@@ -213,6 +354,10 @@ function euclideanDistance(v1, v2) {
 function init() {
 
 	window.addEventListener('resize', onResize, false);
+
+
+	
+
 
 	scene = new THREE.Scene();
 	
@@ -743,89 +888,6 @@ function initLeap() {
 }
 
 
-/*
-function render() { 
-
-	var frame = leapController.frame();
-	if (frame.valid && frame.hands.length == 2) {
-
-		if(handError.visible)
-			camera.remove(handError);
-	
-		if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
-			//hands[0] is to the left of hands[1]
-			rightHand = frame.hands[1];
-			leftHand = frame.hands[0];
-		}
-		else {
-			rightHand = frame.hands[0];
-			leftHand = frame.hands[1];
-		}
-		  
-		vRight = rightHand.palmVelocity;
-		vLeft = leftHand.palmVelocity;
-
-				if(rightObj.position.z < 25)
-					rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
-				if(rightObj.position.z < -150 ) {
-					
-					if(lastHand == "left") {
-						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
-						simMatrixCol = 0;
-					}
-					lastHand = "right";
-
-					simMatrixCol += 1;
-					if(simMatrixCol == listFiles.length) 
-						simMatrixCol = 1;
-
-					fileName2 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
-					console.log("filename1 " + fileName1);
-					console.log("filename2 " + fileName2);
-					drawObject(fileName2, rightObj, false);
-
-					rightLabel.visible = false;
-					leftLabel.visible = false;
-					drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
-				}
-		
-
-				if(leftObj.position.z < 25)
-					leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
-				if(leftObj.position.z < -150 ) {
-					
-					if(lastHand == "right") {
-						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
-						simMatrixCol = 0;
-					}
-					lastHand = "left";
-
-					simMatrixCol += 1;
-					if(simMatrixCol == listFiles.length) 
-						simMatrixCol = 1;
-
-					fileName1 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
-					console.log("filename1 " + fileName1);
-					console.log("filename2 " + fileName2);
-					drawObject(fileName1, leftObj, true);
-
-					rightLabel.visible = false;
-					leftLabel.visible = false;
-					drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
-					
-				}
-
-
-	}
-	
-	else {
-		if(!handError.visble)
-			camera.add(handError);
-	} 
-	riftCam.render(scene, camera);
-}*/
-
-
 
 function render() { 
 
@@ -854,6 +916,7 @@ function render() {
 				rotateAroundWorldAxis(rightTransObj, xAxis,  (vRight[1]/50)* Math.PI/180);
 				break;
 			case 3:
+
 				if(rightObj.position.z < 25)
 					rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
 				if(rightObj.position.z < -150 ) {
@@ -877,9 +940,7 @@ function render() {
 					leftLabel.visible = false;
 					drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 				}
-		
 
-				
 				break;
 			default:
 				rotateAroundWorldAxis(rightObj, yAxis,  (vRight[0]/50)* Math.PI/180);
