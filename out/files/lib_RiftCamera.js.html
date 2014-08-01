@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>lib\RiftCamera.js</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/css/logo.png" title=""></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: </em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1 class="file-heading">File: lib\RiftCamera.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
+/**
+ * @author troffmo5 / http://github.com/troffmo5
+ *
+ * Effect to render the scene in stereo 3d side by side with lens distortion.
+ * It is written to be used with the Oculus Rift (http://www.oculusvr.com/) but
+ * it works also with other HMD using the same technology
+ */
+
+THREE.OculusRiftEffect = function ( renderer, options ) {
+	// worldFactor indicates how many units is 1 meter
+	var worldFactor = (options &amp;&amp; options.worldFactor) ? options.worldFactor: 1.0;
+
+	// Specific HMD parameters
+	var HMD = (options &amp;&amp; options.HMD) ? options.HMD: {
+		// Parameters from the Oculus Rift DK1
+		hResolution: 1280,
+		vResolution: 720,
+		hScreenSize: 0.14976,
+		vScreenSize: 0.0935,
+		interpupillaryDistance: 0.064,
+		lensSeparationDistance: 0.0635,
+		eyeToScreenDistance: 0.041,
+		distortionK : [1.0, 0.22, 0.24, 0.0],
+		chromaAbParameter : [0.996, -0.004, 1.014, 0]
+	};
+
+	// Perspective camera
+	var pCamera = new THREE.PerspectiveCamera();
+	pCamera.matrixAutoUpdate = false;
+	pCamera.target = new THREE.Vector3();
+
+	// Orthographic camera
+	var oCamera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0.0001, 100000 );
+	oCamera.position.z = 1;
+
+	// pre-render hooks
+	this.preLeftRender = function() {};
+	this.preRightRender = function() {};
+
+	//renderer.autoClear = false;
+	var emptyColor = new THREE.Color(&quot;black&quot;);
+
+	// Render target
+	var RTParams = { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat };
+	var renderTarget = new THREE.WebGLRenderTarget( 640, 800, RTParams );
+	var RTMaterial = new THREE.ShaderMaterial( {
+		uniforms: {
+			&quot;texid&quot;: { type: &quot;t&quot;, value: renderTarget },
+			&quot;scale&quot;: { type: &quot;v2&quot;, value: new THREE.Vector2(1.0,1.0) },
+			&quot;scaleIn&quot;: { type: &quot;v2&quot;, value: new THREE.Vector2(1.0,1.0) },
+			&quot;lensCenter&quot;: { type: &quot;v2&quot;, value: new THREE.Vector2(0.0,0.0) },
+			&quot;hmdWarpParam&quot;: { type: &quot;v4&quot;, value: new THREE.Vector4(1.0,0.0,0.0,0.0) },
+			&quot;chromAbParam&quot;: { type: &quot;v4&quot;, value: new THREE.Vector4(1.0,0.0,0.0,0.0) }
+		},
+		vertexShader: [
+			&quot;varying vec2 vUv;&quot;,
+			&quot;void main() {&quot;,
+			&quot; vUv = uv;&quot;,
+			&quot;	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );&quot;,
+			&quot;}&quot;
+		].join(&quot;\n&quot;),
+
+		fragmentShader: [
+			&quot;uniform vec2 scale;&quot;,
+			&quot;uniform vec2 scaleIn;&quot;,
+			&quot;uniform vec2 lensCenter;&quot;,
+			&quot;uniform vec4 hmdWarpParam;&quot;,
+			&#x27;uniform vec4 chromAbParam;&#x27;,
+			&quot;uniform sampler2D texid;&quot;,
+			&quot;varying vec2 vUv;&quot;,
+			&quot;void main()&quot;,
+			&quot;{&quot;,
+			&quot;  vec2 uv = (vUv*2.0)-1.0;&quot;, // range from [0,1] to [-1,1]
+			&quot;  vec2 theta = (uv-lensCenter)*scaleIn;&quot;,
+			&quot;  float rSq = theta.x*theta.x + theta.y*theta.y;&quot;,
+			&quot;  vec2 rvector = theta*(hmdWarpParam.x + hmdWarpParam.y*rSq + hmdWarpParam.z*rSq*rSq + hmdWarpParam.w*rSq*rSq*rSq);&quot;,
+			&#x27;  vec2 rBlue = rvector * (chromAbParam.z + chromAbParam.w * rSq);&#x27;,
+			&quot;  vec2 tcBlue = (lensCenter + scale * rBlue);&quot;,
+			&quot;  tcBlue = (tcBlue+1.0)/2.0;&quot;, // range from [-1,1] to [0,1]
+			&quot;  if (any(bvec2(clamp(tcBlue, vec2(0.0,0.0), vec2(1.0,1.0))-tcBlue))) {&quot;,
+			&quot;    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);&quot;,
+			&quot;    return;}&quot;,
+			&quot;  vec2 tcGreen = lensCenter + scale * rvector;&quot;,
+			&quot;  tcGreen = (tcGreen+1.0)/2.0;&quot;, // range from [-1,1] to [0,1]
+			&quot;  vec2 rRed = rvector * (chromAbParam.x + chromAbParam.y * rSq);&quot;,
+			&quot;  vec2 tcRed = lensCenter + scale * rRed;&quot;,
+			&quot;  tcRed = (tcRed+1.0)/2.0;&quot;, // range from [-1,1] to [0,1]
+			&quot;  gl_FragColor = vec4(texture2D(texid, tcRed).r, texture2D(texid, tcGreen).g, texture2D(texid, tcBlue).b, 1);&quot;,
+			&quot;}&quot;
+		].join(&quot;\n&quot;)
+	} );
+
+	var mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), RTMaterial );
+
+	// Final scene
+	var finalScene = new THREE.Scene();
+	finalScene.add( oCamera );
+	finalScene.add( mesh );
+
+    var left = {}, right = {};
+    var distScale = 1.0;
+	this.setHMD = function(v) {
+		HMD = v;
+		// Compute aspect ratio and FOV
+		var aspect = HMD.hResolution / (2*HMD.vResolution);
+
+		// Fov is normally computed with:
+		//   THREE.Math.radToDeg( 2*Math.atan2(HMD.vScreenSize,2*HMD.eyeToScreenDistance) );
+		// But with lens distortion it is increased (see Oculus SDK Documentation)
+		var r = -1.0 - (4 * (HMD.hScreenSize/4 - HMD.lensSeparationDistance/2) / HMD.hScreenSize);
+		distScale = (HMD.distortionK[0] + HMD.distortionK[1] * Math.pow(r,2) + HMD.distortionK[2] * Math.pow(r,4) + HMD.distortionK[3] * Math.pow(r,6));
+		var fov = HMD.fov ? HMD.fov : THREE.Math.radToDeg(2*Math.atan2(HMD.vScreenSize*distScale, 2*HMD.eyeToScreenDistance));
+
+		// Compute camera projection matrices
+		var proj = (new THREE.Matrix4()).makePerspective( fov, aspect, 0.3, 10000 );
+		var h = 4 * (HMD.hScreenSize/4 - HMD.interpupillaryDistance/2) / HMD.hScreenSize;
+		left.proj = ((new THREE.Matrix4()).makeTranslation( h, 0.0, 0.0 )).multiply(proj);
+		right.proj = ((new THREE.Matrix4()).makeTranslation( -h, 0.0, 0.0 )).multiply(proj);
+
+		// Compute camera transformation matrices
+		left.tranform = (new THREE.Matrix4()).makeTranslation( -worldFactor * HMD.interpupillaryDistance/2, 0.0, 0.0 );
+		right.tranform = (new THREE.Matrix4()).makeTranslation( worldFactor * HMD.interpupillaryDistance/2, 0.0, 0.0 );
+
+		// Compute Viewport
+		left.viewport = [0, 0, HMD.hResolution/2, HMD.vResolution];
+		right.viewport = [HMD.hResolution/2, 0, HMD.hResolution/2, HMD.vResolution];
+
+		// Distortion shader parameters
+		var lensShift = 4 * (HMD.hScreenSize/4 - HMD.lensSeparationDistance/2) / HMD.hScreenSize;
+		left.lensCenter = new THREE.Vector2(lensShift, 0.0);
+		right.lensCenter = new THREE.Vector2(-lensShift, 0.0);
+
+		RTMaterial.uniforms[&#x27;hmdWarpParam&#x27;].value = new THREE.Vector4(HMD.distortionK[0], HMD.distortionK[1], HMD.distortionK[2], HMD.distortionK[3]);
+		RTMaterial.uniforms[&#x27;chromAbParam&#x27;].value = new THREE.Vector4(HMD.chromaAbParameter[0], HMD.chromaAbParameter[1], HMD.chromaAbParameter[2], HMD.chromaAbParameter[3]);
+		RTMaterial.uniforms[&#x27;scaleIn&#x27;].value = new THREE.Vector2(1.0,1.0/aspect);
+		RTMaterial.uniforms[&#x27;scale&#x27;].value = new THREE.Vector2(1.0/distScale, 1.0*aspect/distScale);
+		console.log(lensShift);
+		console.log(&quot;ScaleIn&quot;,  new THREE.Vector2(1.0,1.0/aspect));
+		console.log(&quot;Scale&quot;,  new THREE.Vector2(1.0,1.0/aspect));
+
+		// Create render target
+		renderTarget = new THREE.WebGLRenderTarget( HMD.hResolution*distScale/2, HMD.vResolution*distScale, RTParams );
+		RTMaterial.uniforms[ &quot;texid&quot; ].value = renderTarget;
+
+	}	
+	this.getHMD = function() {return HMD};
+
+	this.setHMD(HMD);	
+
+	this.setSize = function ( width, height ) {
+		left.viewport = [width/2 - HMD.hResolution/2, height/2 - HMD.vResolution/2, HMD.hResolution/2, HMD.vResolution];
+		right.viewport = [width/2, height/2 - HMD.vResolution/2, HMD.hResolution/2, HMD.vResolution];
+
+		renderer.setSize( width, height );
+	};
+
+	this.render = function ( scene, camera ) {
+		var cc = renderer.getClearColor().clone();
+		var autoClear = renderer.autoClear;
+
+		renderer.autoClear = false;
+
+		// Clear
+		renderer.setClearColor(emptyColor);
+		renderer.clear();
+		renderer.setClearColor(cc);
+
+		// camera parameters
+		if (camera.matrixAutoUpdate) camera.updateMatrix();
+
+		// Render left
+		this.preLeftRender();
+
+		pCamera.projectionMatrix.copy(left.proj);
+
+		pCamera.matrix.copy(camera.matrix).multiply(left.tranform);
+		pCamera.matrixWorldNeedsUpdate = true;
+
+		renderer.setViewport(left.viewport[0], left.viewport[1], left.viewport[2], left.viewport[3]);
+
+		RTMaterial.uniforms[&#x27;lensCenter&#x27;].value = left.lensCenter;
+		renderer.render( scene, pCamera, renderTarget, true );
+
+		renderer.render( finalScene, oCamera );
+
+		// Render right
+		this.preRightRender();
+
+		pCamera.projectionMatrix.copy(right.proj);
+
+		pCamera.matrix.copy(camera.matrix).multiply(right.tranform);
+		pCamera.matrixWorldNeedsUpdate = true;
+
+		renderer.setViewport(right.viewport[0], right.viewport[1], right.viewport[2], right.viewport[3]);
+
+		RTMaterial.uniforms[&#x27;lensCenter&#x27;].value = right.lensCenter;
+
+		renderer.render( scene, pCamera, renderTarget, true );
+		renderer.render( finalScene, oCamera );
+
+		renderer.autoClear = autoClear;
+	};
+
+};
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

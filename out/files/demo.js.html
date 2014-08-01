@@ -1,8 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>demo.js</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/css/logo.png" title=""></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: </em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1 class="file-heading">File: demo.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
 /**
  * demo.js
  * Implementation of 3D immersion mode for the CTIANP project.
  *
- * @author Zeshawn Shaheen
+ * @author Zeshawn Shaheen edit...
  */
 
 
@@ -64,7 +150,7 @@ var fileName1, fileName2;
 var objRawData;
 var listFiles; //List of files in a specific directory
 var prefix;
-var lastHand="right", simMatrixRow = 0, simMatrixCol = 1;
+var lastHand=&quot;right&quot;, simMatrixRow = 0, simMatrixCol = 1;
 var listOfFolders=[], listOfFilesInFolder=[];
 
 
@@ -76,37 +162,37 @@ window.onload = function() {
 	initErrors();
 	initOculus();
 	leapLoop();
-	var dir = "data"
+	var dir = &quot;data&quot;
 	ajaxRequestFolders(dir);
 
 	
 }
 
 function menu() {
-	this.folder = "";
+	this.folder = &quot;&quot;;
 	this.explode = function() {resetMoleculePos()};
-	//this.resetPos = "";
+	//this.resetPos = &quot;&quot;;
 	//possible for future implementation
-	//this.leftMolecule = "";
-	//this.rightMolecule = "";
+	//this.leftMolecule = &quot;&quot;;
+	//this.rightMolecule = &quot;&quot;;
 }
 
 function ajaxRequestFolders(dir) {
 	$.ajax({
 
-		type: "POST",
+		type: &quot;POST&quot;,
 
-		url: "getFilesInDir.php?dir=" + dir + "%2F",
+		url: &quot;getFilesInDir.php?dir=&quot; + dir + &quot;%2F&quot;,
 
-		dataType: "json",
+		dataType: &quot;json&quot;,
 
 		success: function(data) {
 
-			listOfFolders = data.split("NF");
-			//delete the last index which is just ""
+			listOfFolders = data.split(&quot;NF&quot;);
+			//delete the last index which is just &quot;&quot;
 			listOfFolders.splice(listOfFolders.length-1, 1);
-			//add a "" in the first index
-			listOfFolders.unshift("");
+			//add a &quot;&quot; in the first index
+			listOfFolders.unshift(&quot;&quot;);
 			console.log(listOfFolders);
 			initMenu();
 
@@ -117,34 +203,34 @@ function ajaxRequestFolders(dir) {
 
 function resetMoleculePos() {
 	leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
-	leftTransObj.rotation.set(0,0,0,'XYZ');
+	leftTransObj.rotation.set(0,0,0,&#x27;XYZ&#x27;);
 	
 	rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
-	rightTransObj.rotation.set(0,0,0,'XYZ');
+	rightTransObj.rotation.set(0,0,0,&#x27;XYZ&#x27;);
 
-	leftObj.rotation.set(0,0,0,'XYZ');
-	rightObj.rotation.set(0,0,0,'XYZ');
+	leftObj.rotation.set(0,0,0,&#x27;XYZ&#x27;);
+	rightObj.rotation.set(0,0,0,&#x27;XYZ&#x27;);
 }
 
 
 function ajaxRequestFiles(dir) {
 	$.ajax({
 
-		type: "POST",
+		type: &quot;POST&quot;,
 
-		url: "getFilesInDir.php?dir=" + dir + "%2F",
+		url: &quot;getFilesInDir.php?dir=&quot; + dir + &quot;%2F&quot;,
 
-		dataType: "json",
+		dataType: &quot;json&quot;,
 
 		success: function(data) {
 
 			//gui.__controllers[2].remove();
 			//gui.__controllers[1].remove();
 
-			//console.log("ajaxRequestFILES success");
-			listOfFilesInFolder = data.split("NF");
-			//console.log("data.split working");
-			//delete the last index which is just ""
+			//console.log(&quot;ajaxRequestFILES success&quot;);
+			listOfFilesInFolder = data.split(&quot;NF&quot;);
+			//console.log(&quot;data.split working&quot;);
+			//delete the last index which is just &quot;&quot;
 			listOfFilesInFolder.splice(listOfFilesInFolder.length-1, 1);
 			console.log(listOfFilesInFolder);
 
@@ -154,7 +240,7 @@ function ajaxRequestFiles(dir) {
 			simMatrix = [];
 			objRawData = [];
 			listFiles = [];
-			lastHand="right";
+			lastHand=&quot;right&quot;;
 			simMatrixRow = 0; 
 			simMatrixCol = 1;
 			resetMoleculePos();
@@ -169,17 +255,17 @@ function ajaxRequestFiles(dir) {
 function initMenu() {
 	gui = new dat.GUI();
 	menu = new menu();
-	//gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(updateGUI(newValue));
-	gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(function(newValue){
-		if(newValue != "") {
-			prefix = "data/" + newValue +"/";
-			//console.log("updateGUI called: "+newValue);
+	//gui.add(menu, &quot;folder&quot;, listOfFolders).name(&quot;Choose a folder&quot;).onFinishChange(updateGUI(newValue));
+	gui.add(menu, &quot;folder&quot;, listOfFolders).name(&quot;Choose a folder&quot;).onFinishChange(function(newValue){
+		if(newValue != &quot;&quot;) {
+			prefix = &quot;data/&quot; + newValue +&quot;/&quot;;
+			//console.log(&quot;updateGUI called: &quot;+newValue);
 			
 			ajaxRequestFiles(prefix);
 			
 		}
 	});
-	gui.add(menu, 'explode').name("Reset position");
+	gui.add(menu, &#x27;explode&#x27;).name(&quot;Reset position&quot;);
 }
 
 function simReadData() {
@@ -191,21 +277,21 @@ function simReadData() {
 	var tempData, line;
 
 	
-	//dirs = ["0x1","0x2"];
+	//dirs = [&quot;0x1&quot;,&quot;0x2&quot;];
 	//assuming we opened the folder 0x1
-	//listFiles = ["5155", "6288", "6465", "7067", "7392", "7861", "9996"];
+	//listFiles = [&quot;5155&quot;, &quot;6288&quot;, &quot;6465&quot;, &quot;7067&quot;, &quot;7392&quot;, &quot;7861&quot;, &quot;9996&quot;];
 	listFiles = listOfFilesInFolder;
 	console.log	
 
-	//prefix = "data/" + dirs[0]+"/";
+	//prefix = &quot;data/&quot; + dirs[0]+&quot;/&quot;;
 
 	//var comdata = [];
-	for(var i=0; i<listFiles.length; i++) {
+	for(var i=0; i&lt;listFiles.length; i++) {
 	
 		var get = $.get(prefix+listFiles[i], function(data) {
 			// split the data by line
-			tempData = data.split("\n");
-			line = tempData[0].split(" ");
+			tempData = data.split(&quot;\n&quot;);
+			line = tempData[0].split(&quot; &quot;);
 			
 			comdata.push( [line[1], line[2], line[3]] );
 		});
@@ -219,7 +305,7 @@ function simReadData() {
 		fileName2 = prefix + listFiles[ simMatrix[simMatrixRow].sortIndices[simMatrixCol] ];
 		//The left label is always intially 0
 		//
-		drawLabels(0, getIndex(listFiles[simMatrix[0].sortIndices[1]]), listFiles.length-1 ,fileName1, fileName2, "right");
+		drawLabels(0, getIndex(listFiles[simMatrix[0].sortIndices[1]]), listFiles.length-1 ,fileName1, fileName2, &quot;right&quot;);
 		draw();
 			
 	});
@@ -240,10 +326,10 @@ function simCreateMatrix(comdata, size) {
 	var temp1dArray;// = [];
 	
 	//Can optimize below
-	for(var i=0; i<size; i++) {
+	for(var i=0; i&lt;size; i++) {
 		temp1dArray = [];
 		
-		for(var j=0; j<size; j++) {
+		for(var j=0; j&lt;size; j++) {
 			//console.log( i.toString() + j.toString() );
 			temp1dArray.push(euclideanDistance(comdata[i], comdata[j]));
 		}
@@ -252,11 +338,11 @@ function simCreateMatrix(comdata, size) {
 	
 	//display the raw euclidean distances in simMatrix
 	/*
-	for(var i=0; i<size; i++) {
-		for(var j=0; j<size; j++) {
+	for(var i=0; i&lt;size; i++) {
+		for(var j=0; j&lt;size; j++) {
 			//if(i == 0)
-				//console.log(comdata[i] + " & " + comdata[j]);
-			console.log( i + ", " + j + ": " + simMatrix[i][j] );
+				//console.log(comdata[i] + &quot; &amp; &quot; + comdata[j]);
+			console.log( i + &quot;, &quot; + j + &quot;: &quot; + simMatrix[i][j] );
 		}
 	}
 	*/
@@ -275,8 +361,8 @@ function simCreateMatrix(comdata, size) {
 	*	meaning that the files in listFiles[4] is the most similar (other than the files itself), 
 	*/
 	
-	for(var i=0; i<size; i++) {
-		//console.log("NEW LOOP:" + i)
+	for(var i=0; i&lt;size; i++) {
+		//console.log(&quot;NEW LOOP:&quot; + i)
 		//console.log(simMatrix[i]);
 		sortWithIndeces(simMatrix[i]);
 		//console.log(simMatrix[i]);
@@ -284,22 +370,22 @@ function simCreateMatrix(comdata, size) {
 	}
 	
 	//Now save simMatrix into a file:
-	//CAN'T DO WITH JAVASCRIPT
+	//CAN&#x27;T DO WITH JAVASCRIPT
 	
 }
 
 function sortWithIndeces(toSort) {
 	//code taken from http://stackoverflow.com/questions/3730510/javascript-sort-array-and-return-an-array-of-indicies-that-indicates-the-positi
-	for (var i = 0; i < toSort.length; i++) {
+	for (var i = 0; i &lt; toSort.length; i++) {
 		toSort[i] = [toSort[i], i];
 	}
 	
 	toSort.sort(function(left, right) {
-		return left[0] < right[0] ? -1 : 1;
+		return left[0] &lt; right[0] ? -1 : 1;
 	});
 	
 	toSort.sortIndices = [];
-	for (var j = 0; j < toSort.length; j++) {
+	for (var j = 0; j &lt; toSort.length; j++) {
 		toSort.sortIndices.push(toSort[j][1]);
 		toSort[j] = toSort[j][0];
 	}
@@ -316,7 +402,7 @@ function euclideanDistance(v1, v2) {
 
 function init() {
 
-	window.addEventListener('resize', onResize, false);
+	window.addEventListener(&#x27;resize&#x27;, onResize, false);
 
 
 	
@@ -336,7 +422,7 @@ function init() {
 	renderer.setClearColor(0xE6B88A);
 	renderer.setSize(window.innerWidth, window.innerHeight);
 
-	element = document.getElementById('viewport');
+	element = document.getElementById(&#x27;viewport&#x27;);
 	element.appendChild(renderer.domElement);
 	
 	//lighting
@@ -348,9 +434,9 @@ function init() {
 	scene.add(point);
 	
 	stats = new Stats();
-	stats.domElement.style.position = 'absolute';
-	stats.domElement.style.left = '0px';
-	stats.domElement.style.top = '0px';
+	stats.domElement.style.position = &#x27;absolute&#x27;;
+	stats.domElement.style.left = &#x27;0px&#x27;;
+	stats.domElement.style.top = &#x27;0px&#x27;;
 	document.body.appendChild( stats.domElement );
 
 	leftObj = new THREE.Object3D();
@@ -376,9 +462,9 @@ function initOculus() {
 	xzVector = new THREE.Vector3(0, 0, 1);
 	
 	oculusBridge = new OculusBridge({
-		"debug" : true,
-		"onOrientationUpdate" : bridgeOrientationUpdated,
-		"onConfigUpdate"      : bridgeConfigUpdated
+		&quot;debug&quot; : true,
+		&quot;onOrientationUpdate&quot; : bridgeOrientationUpdated,
+		&quot;onConfigUpdate&quot;      : bridgeConfigUpdated
 	});
 	oculusBridge.connect();
 
@@ -394,7 +480,7 @@ function onResize() {
 
 function bridgeConfigUpdated(config){
 	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
-	console.log("Oculus config updated.");
+	console.log(&quot;Oculus config updated.&quot;);
 	riftCam.setHMD(config);      
 }
 
@@ -432,7 +518,7 @@ function render() {
 		riftCam.render(scene, camera);
 	/*} catch(e){
 		console.log(e);
-	if(e.name == "SecurityError"){
+	if(e.name == &quot;SecurityError&quot;){
 		crashSecurity(e);
 	} else {
 		crashOther(e);
@@ -446,15 +532,15 @@ function render() {
 /*
 function crashSecurity(e){
 	oculusBridge.disconnect();
-	document.getElementById("viewport").style.display = "none";
-	document.getElementById("security_error").style.display = "block";
+	document.getElementById(&quot;viewport&quot;).style.display = &quot;none&quot;;
+	document.getElementById(&quot;security_error&quot;).style.display = &quot;block&quot;;
 }
 
 function crashOther(e){
 	oculusBridge.disconnect();
-	document.getElementById("viewport").style.display = "none";
-	document.getElementById("generic_error").style.display = "block";
-	document.getElementById("exception_message").innerHTML = e.message;
+	document.getElementById(&quot;viewport&quot;).style.display = &quot;none&quot;;
+	document.getElementById(&quot;generic_error&quot;).style.display = &quot;block&quot;;
+	document.getElementById(&quot;exception_message&quot;).innerHTML = e.message;
 }
 */
 
@@ -474,7 +560,7 @@ function rotateAroundWorldAxis(object, axis, radians) {
 function avgPos(data, numberOfAtoms) {
 	var position = new THREE.Vector3;
 	var sumX=0, sumY=0, sumZ=0;
-	for (var i = 0; i < numberOfAtoms; i++) {
+	for (var i = 0; i &lt; numberOfAtoms; i++) {
 			sumX += data[i][1];
 			sumY += data[i][2];
 			sumZ += data[i][3];
@@ -496,24 +582,24 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	var cylArray = [];
 	var tempMesh;
 	
-	for (var i = 0; i < numberOfAtoms; i++) {
+	for (var i = 0; i &lt; numberOfAtoms; i++) {
 		switch(atoms[i][0]) {
-			case "H":
+			case &quot;H&quot;:
 				tempMesh = new THREE.Mesh(geometry, hydrogenMat);
 				tempMesh.position.set(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 				molObj.add(tempMesh);
 				break;
-			case "HO":
+			case &quot;HO&quot;:
 				tempMesh = new THREE.Mesh(geometry, oxygenMat );
 				tempMesh.position.set(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 				molObj.add(tempMesh);
 				break;
-			case "O":
+			case &quot;O&quot;:
 				tempMesh = new THREE.Mesh(geometry, water_oxygenMat );
 				tempMesh.position.set(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 				molObj.add(tempMesh);
 				break;
-			case "C":
+			case &quot;C&quot;:
 				cylArray.push(i)
 				break;
 			default:
@@ -529,7 +615,7 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	}
 	//Now add in the carbon chains
 	
-	for(var i=0; i< cylArray.length-1; i++) { 
+	for(var i=0; i&lt; cylArray.length-1; i++) { 
 	
 		//get a THREE.Vector3 based on the values in cylArray
 		if(cylArray[i] == cylArray[i+1]-1) {
@@ -575,9 +661,9 @@ function cylinderBetweenPoints(vstart, vend) {
 function removeObjects() {
 	//deletes rightObj, leftObj,  rightTransObj, leftTransObj and all their children
 	/*var obj, i;
-	for ( i = scene.children.length - 1; i >= 0 ; i -- ) {
+	for ( i = scene.children.length - 1; i &gt;= 0 ; i -- ) {
 	    obj = scene.children[ i ];
-	    if ( obj !== ambient && obj !== camera && obj !== point && obj !== handError ) {
+	    if ( obj !== ambient &amp;&amp; obj !== camera &amp;&amp; obj !== point &amp;&amp; obj !== handError ) {
 	        scene.remove(obj);
 	    }
 	}*/
@@ -590,11 +676,11 @@ function removeObjects() {
 
 	var i, obj;
 
-	for ( i = rightObj.children.length - 1; i >= 0 ; i -- ) {
+	for ( i = rightObj.children.length - 1; i &gt;= 0 ; i -- ) {
 		obj = rightObj.children[ i ];
 			rightObj.remove(obj);
 	}
-	for ( i = leftObj.children.length - 1; i >= 0 ; i -- ) {
+	for ( i = leftObj.children.length - 1; i &gt;= 0 ; i -- ) {
 		obj = leftObj.children[ i ];
 			leftObj.remove(obj);
 	}
@@ -619,14 +705,14 @@ function parseDataToAtoms(data, object) {
 	var atoms = new Array(numberOfAtoms);
 	
 	//Each element in parsed[] is an array of 4 
-	for (var i = 0; i < numberOfAtoms; i++) {
+	for (var i = 0; i &lt; numberOfAtoms; i++) {
 		atoms[i] = new Array(4);
 		//now atoms is a two dimensional array
 	}
 
-	for (var i = 0; i < numberOfAtoms; i++) {
+	for (var i = 0; i &lt; numberOfAtoms; i++) {
 		var next = i+2; // skip COM and number of points in file
-		var line = data[next].split(" ");
+		var line = data[next].split(&quot; &quot;);
 		for (var j in line) {
 			if(j==0)
 				atoms[i][j] = line[j];
@@ -646,8 +732,8 @@ function drawObject(filename, object, isLeft){
 
 	//Delete the object and all of its children
 	var obj, canvas = null, texture = null;
-	if(object.children.length > 1) { //or 0?
-		for (var i = object.children.length - 1; i >= 0 ; i -- ) {
+	if(object.children.length &gt; 1) { //or 0?
+		for (var i = object.children.length - 1; i &gt;= 0 ; i -- ) {
 			obj = object.children[ i ];
 				object.remove(obj);
 		}
@@ -659,7 +745,7 @@ function drawObject(filename, object, isLeft){
 //open the file:
 	var get = $.get(filename, function(data) {
 		// split the data by line
-		objRawData = data.split("\n");
+		objRawData = data.split(&quot;\n&quot;);
 	});
 
 	get.success(function() {
@@ -686,8 +772,8 @@ function drawObject(filename, object, isLeft){
 
 function draw() {
 	
-	console.log("fileName1_draw: " + fileName1);
-	console.log("fileName2_draw: " + fileName2);
+	console.log(&quot;fileName1_draw: &quot; + fileName1);
+	console.log(&quot;fileName2_draw: &quot; + fileName2);
 
 	drawObject(fileName1, leftObj, true);
 	drawObject(fileName2, rightObj, false);
@@ -699,7 +785,7 @@ function draw() {
 function initErrors() {
 	var handsGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
 	//var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-	var handsTexture = THREE.ImageUtils.loadTexture('textures/nohands.gif');
+	var handsTexture = THREE.ImageUtils.loadTexture(&#x27;textures/nohands.gif&#x27;);
 	var handsMat = new THREE.MeshBasicMaterial({map: handsTexture});
 	handError = new THREE.Mesh(handsGeo, handsMat);
 	handError.position.set(0, -0.2, -0.5);
@@ -707,7 +793,7 @@ function initErrors() {
 	
 	/*
 	var leapGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
-	var leapTexture = THREE.ImageUtils.loadTexture('textures/noleap.png');
+	var leapTexture = THREE.ImageUtils.loadTexture(&#x27;textures/noleap.png&#x27;);
 	var leapMat = new THREE.MeshBasicMaterial({map: leapTexture});
 	leapError = new THREE.Mesh(leapGeo, leapMat);
 	leapError.position.set(0, 0, -0.5);
@@ -725,11 +811,11 @@ function initErrors() {
 function drawLabels(posL, posR, total, filenameLeft, filenameRight, handCalled ){
 
 
-	leftLabel = createTextMaterial(posL, total, filenameLeft, "left", handCalled);
-	rightLabel = createTextMaterial(posR, total, filenameRight, "right", handCalled);
+	leftLabel = createTextMaterial(posL, total, filenameLeft, &quot;left&quot;, handCalled);
+	rightLabel = createTextMaterial(posR, total, filenameRight, &quot;right&quot;, handCalled);
 	//createTextMaterial(rightLabel);
 
-	//var handsMat = new THREE.MeshBasicMaterial( { color: "red" } );
+	//var handsMat = new THREE.MeshBasicMaterial( { color: &quot;red&quot; } );
 	//leftLabel = new THREE.Mesh(labelGeo, handsMat);
 	
 	leftLabel.position.set(-0.2, 0.25, -0.5);
@@ -753,27 +839,27 @@ function drawLabels(posL, posR, total, filenameLeft, filenameRight, handCalled )
 
 function createTextCanvas(pos, total, filename, leftOrRight, handCalled) {
 
-	var position = "";
-	var canvas = document.createElement('canvas');
-	var g = canvas.getContext('2d');
+	var position = &quot;&quot;;
+	var canvas = document.createElement(&#x27;canvas&#x27;);
+	var g = canvas.getContext(&#x27;2d&#x27;);
 	canvas.width = 100;
 	canvas.height = 100;
-	g.font = 'Bold 27px Arial';
+	g.font = &#x27;Bold 27px Arial&#x27;;
 
 	console.log(leftOrRight)
 	if(handCalled == leftOrRight)
-		position = " "+ pos + "/" + total;
+		position = &quot; &quot;+ pos + &quot;/&quot; + total;
 
-	g.fillStyle = 'white';
+	g.fillStyle = &#x27;white&#x27;;
 	g.fillText(position ,0,40);
-	g.strokeStyle='black';
+	g.strokeStyle=&#x27;black&#x27;;
 	g.strokeText(position ,0,40);
 
 	
-	g.fillText("  "+filename.split("/").pop() ,0,80);
-	g.strokeText("  "+filename.split("/").pop() ,0,80);
-	//g.fillText("  "+filename ,0,80);
-	//g.strokeText("  "+filename ,0,80);
+	g.fillText(&quot;  &quot;+filename.split(&quot;/&quot;).pop() ,0,80);
+	g.strokeText(&quot;  &quot;+filename.split(&quot;/&quot;).pop() ,0,80);
+	//g.fillText(&quot;  &quot;+filename ,0,80);
+	//g.strokeText(&quot;  &quot;+filename ,0,80);
 
 	return canvas;
 
@@ -789,7 +875,7 @@ function createTextMaterial(pos, total, filename, leftOrRight, handCalled) {
 	texture.needsUpdate = true;
 	var material = new THREE.MeshBasicMaterial({
 		map : texture,
-		color : "gray",
+		color : &quot;gray&quot;,
 		//transparent : true
 	});
 	
@@ -808,12 +894,12 @@ function initLeap() {
 function render() { 
 
 	frame = leapController.frame();
-	if (frame.valid && frame.hands.length == 2) {
+	if (frame.valid &amp;&amp; frame.hands.length == 2) {
 
 		if(handError.visible)
 			camera.remove(handError);
 	
-		if(frame.hands[0].palmPosition[0] < frame.hands[1].palmPosition[0]) {
+		if(frame.hands[0].palmPosition[0] &lt; frame.hands[1].palmPosition[0]) {
 			//hands[0] is to the left of hands[1]
 			rightHand = frame.hands[1];
 			leftHand = frame.hands[0];
@@ -833,28 +919,28 @@ function render() {
 				break;
 			case 3:
 
-				if(rightObj.position.z < 25)
+				if(rightObj.position.z &lt; 25)
 					rightObj.translateOnAxis(rightObj.worldToLocal(new THREE.Vector3(0,0,25)), vRight[2]/5000);
-				if(rightObj.position.z < -150 ) {
+				if(rightObj.position.z &lt; -150 ) {
 					
-					if(lastHand == "left") {
+					if(lastHand == &quot;left&quot;) {
 						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
 						simMatrixCol = 0;
 					}
-					lastHand = "right";
+					lastHand = &quot;right&quot;;
 
 					simMatrixCol += 1;
 					if(simMatrixCol == listFiles.length) 
 						simMatrixCol = 1;
 
 					fileName2 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
-					console.log("filename1 " + fileName1);
-					console.log("filename2 " + fileName2);
+					console.log(&quot;filename1 &quot; + fileName1);
+					console.log(&quot;filename2 &quot; + fileName2);
 					drawObject(fileName2, rightObj, false);
 
 					rightLabel.visible = false;
 					leftLabel.visible = false;
-					drawLabels(simMatrixRow, 1010, listFiles.length-1 ,fileName1, fileName2, "right");
+					drawLabels(simMatrixRow, 1010, listFiles.length-1 ,fileName1, fileName2, &quot;right&quot;);
 				}
 
 				break;
@@ -870,28 +956,28 @@ function render() {
 				rotateAroundWorldAxis(leftTransObj, xAxis,  (vLeft[1]/50)* Math.PI/180);
 				break;
 			case 3:
-				if(leftObj.position.z < 25)
+				if(leftObj.position.z &lt; 25)
 					leftObj.translateOnAxis(leftObj.worldToLocal(new THREE.Vector3(0,0,25)), vLeft[2]/5000);
-				if(leftObj.position.z < -150 ) {
+				if(leftObj.position.z &lt; -150 ) {
 					
-					if(lastHand == "right") {
+					if(lastHand == &quot;right&quot;) {
 						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
 						simMatrixCol = 0;
 					}
-					lastHand = "left";
+					lastHand = &quot;left&quot;;
 
 					simMatrixCol += 1;
 					if(simMatrixCol == listFiles.length) 
 						simMatrixCol = 1;
 
 					fileName1 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
-					console.log("filename1 " + fileName1);
-					console.log("filename2 " + fileName2);
+					console.log(&quot;filename1 &quot; + fileName1);
+					console.log(&quot;filename2 &quot; + fileName2);
 					drawObject(fileName1, leftObj, true);
 
 					rightLabel.visible = false;
 					leftLabel.visible = false;
-					drawLabels(1010, simMatrixRow, listFiles.length-1 ,fileName1, fileName2, "left");
+					drawLabels(1010, simMatrixRow, listFiles.length-1 ,fileName1, fileName2, &quot;left&quot;);
 					
 				}
 
@@ -914,7 +1000,7 @@ function render() {
 
 
 function getIndex(string) {
-	for(var i=0; i<listFiles.length; i++) {
+	for(var i=0; i&lt;listFiles.length; i++) {
 		if(listFiles[i] == string)
 			return i;
 	}
@@ -951,3 +1037,23 @@ function leapLoop() {
 }
 	
 
+
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

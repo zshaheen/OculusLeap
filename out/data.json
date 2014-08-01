@@ -1,0 +1,46 @@
+{
+    "project": {},
+    "files": {
+        "lib\\RiftCamera.js": {
+            "name": "lib\\RiftCamera.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "demo.js": {
+            "name": "demo.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {},
+    "classes": {},
+    "classitems": [
+        {
+            "file": "lib\\RiftCamera.js",
+            "line": 1,
+            "author": "troffmo5 / http://github.com/troffmo5\n\nEffect to render the scene in stereo 3d side by side with lens distortion.\nIt is written to be used with the Oculus Rift (http://www.oculusvr.com/) but\nit works also with other HMD using the same technology",
+            "class": ""
+        },
+        {
+            "file": "demo.js",
+            "line": 1,
+            "description": "demo.js\nImplementation of 3D immersion mode for the CTIANP project.",
+            "author": "Zeshawn Shaheen edit...",
+            "class": ""
+        }
+    ],
+    "warnings": [
+        {
+            "message": "Missing item type",
+            "line": " lib\\RiftCamera.js:1"
+        },
+        {
+            "message": "Missing item type\ndemo.js\nImplementation of 3D immersion mode for the CTIANP project.",
+            "line": " demo.js:1"
+        }
+    ]
+}
