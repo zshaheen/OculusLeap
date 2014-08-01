@@ -51,10 +51,11 @@ var interval = 0;
 //matrix data
 //var comdata;
 //an square matrix of size n where n is the # of files in a specific folder
+
+
 var simMatrix;
 var fileName1, fileName2;
 var objRawData;
-var rightCurrentIndex=0, leftCurrentIndex = 0;
 var listFiles; //List of files in a specific directory
 var prefix;
 var lastHand="right", simMatrixRow = 0, simMatrixCol = 1;
@@ -62,15 +63,13 @@ var listOfFolders=[], listOfFilesInFolder=[];
 
 
 window.onload = function() {
-	/*init();
+	
+	init();
+	//initLabels();;
+	initLeap();
 	initErrors();
 	initOculus();
-	initLeap();
-	draw();*/
-	//leapLoop();
-	
-	//create the gui and send an ajax request to get a list of folders in the directory
-
+	leapLoop();
 	var dir = "data"
 	ajaxRequestFolders(dir);
 
@@ -79,8 +78,9 @@ window.onload = function() {
 
 function menu() {
 	this.folder = "";
-	this.leftMolecule = "";
-	this.rightMolecule = "";
+	//possible for future implementation
+	//this.leftMolecule = "";
+	//this.rightMolecule = "";
 }
 
 function ajaxRequestFolders(dir) {
@@ -131,17 +131,17 @@ function ajaxRequestFiles(dir) {
 			//listOfFilesInFolder.unshift("");
 			console.log(listOfFilesInFolder);
 			
+			/*
 			for (var i in gui.__controllers) {
 			    gui.__controllers[i].updateDisplay();
 			}
 
-			
 			gui.__controllers[2].remove();
 			console.log("remove[2]");
 			gui.__controllers[1].remove();
 			console.log("remove[1]");
 
-			//if(gui.__controllers.length == 1) {
+
 				gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").onFinishChange(function(newValue){
 					if(newValue != "") {
 
@@ -160,26 +160,24 @@ function ajaxRequestFiles(dir) {
 				    //On select, have load molecule or something...
 				    //On select, have load molecule or something...
 				    //On select, have load molecule or something...
-				}); 
+				}); */
+				// TODO reset the position of the molecules and indecies
+				simMatrix = [];
+				objRawData = [];
+				listFiles = [];
+				lastHand="right";
+				simMatrixRow = 0; 
+				simMatrixCol = 1;
+				leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
+				rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
 
 				simReadData();
 			}
-		//}
+
 
 	});
 }
 
-function updateGUI(newValue) {
-
-	//clean Left Molecule and Right Molecule options in menu
-
-	prefix = "data/" + newValue +"/";
-	console.log("updateGUI called: "+newValue);
-	
-	ajaxRequestFiles(prefix);
-	
-	
-}
 
 function initMenu() {
 	gui = new dat.GUI();
@@ -187,14 +185,17 @@ function initMenu() {
 	//gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(updateGUI(newValue));
 	gui.add(menu, "folder", listOfFolders).name("Choose a folder").listen().onFinishChange(function(newValue){
 		if(newValue != "") {
-			updateGUI(newValue);
+			prefix = "data/" + newValue +"/";
+			//console.log("updateGUI called: "+newValue);
+			
+			ajaxRequestFiles(prefix);
 			
 		}
 			
 	});
 
 	//gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").listen();//.onFinishChange(function(newValue){
-	gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").listen().onFinishChange(function(newValue){
+	/*gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").listen().onFinishChange(function(newValue){
 	    //On select, have load molecule or something...
 	    //On select, have load molecule or something...
 	    //On select, have load molecule or something...
@@ -206,13 +207,10 @@ function initMenu() {
 	    //On select, have load molecule or something...
 	    //On select, have load molecule or something...
 	    //On select, have load molecule or something...
-	});
+	});*/
 }
 
 function simReadData() {
-
-
-	
 
 
 	//var dirs; // List of directories. ex: 0x1, 0x2, etc.
@@ -229,7 +227,7 @@ function simReadData() {
 
 	//prefix = "data/" + dirs[0]+"/";
 
-	var comdata = [];
+	//var comdata = [];
 	for(var i=0; i<listFiles.length; i++) {
 	
 		var get = $.get(prefix+listFiles[i], function(data) {
@@ -245,19 +243,10 @@ function simReadData() {
 		simCreateMatrix(comdata, listFiles.length);
 		//console.log(simMatrix[0].sortIndices );
 		//set fileName1 and fileName2
-		//Fix this so that threr aren't any repeats
-		rightCurrentIndex += 1;
-		fileName1 = prefix + listFiles[leftCurrentIndex];
-		fileName2 = prefix + listFiles[ simMatrix[leftCurrentIndex].sortIndices[rightCurrentIndex] ];
-		
-		//now call in the rest of the functions
-		init();
-		//initLabels();;
-		initLeap();
-		initErrors();
-		initOculus();
+		fileName1 = prefix + listFiles[simMatrixRow];
+		fileName2 = prefix + listFiles[ simMatrix[simMatrixRow].sortIndices[simMatrixCol] ];
+		drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 		draw();
-		//now load in listFiles[
 			
 	});
 }
@@ -390,6 +379,14 @@ function init() {
 	stats.domElement.style.left = '0px';
 	stats.domElement.style.top = '0px';
 	document.body.appendChild( stats.domElement );
+
+	leftObj = new THREE.Object3D();
+	rightObj = new THREE.Object3D();
+	leftTransObj = new THREE.Object3D();
+	rightTransObj = new THREE.Object3D();
+	
+	leftTransObj.position = camera.position;
+	rightTransObj.position = camera.position;
 
 }
 
@@ -710,15 +707,9 @@ function draw() {
 	
 	//starts the entire chain that draws all of the objects and instantiants ...
 	//them as leftObj and rightObj
-	var objRawData1, objRawData2;
+	//var objRawData1, objRawData2;
 	
-	leftObj = new THREE.Object3D();
-	rightObj = new THREE.Object3D();
-	leftTransObj = new THREE.Object3D();
-	rightTransObj = new THREE.Object3D();
 	
-	leftTransObj.position = camera.position;
-	rightTransObj.position = camera.position;
 	
 	//initErrors();
 	console.log("fileName1_draw: " + fileName1);
@@ -732,7 +723,7 @@ function draw() {
 	//getData1(fileName1, fileName2);
 	drawObject(fileName1, leftObj, true);
 	drawObject(fileName2, rightObj, false);
-	leapLoop();
+	
 
 	/*leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
 	rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
@@ -769,45 +760,10 @@ function initErrors() {
 }
 
 
-function initLabels() {
-	//create left and right planes at the correct position with a blank texture
-
-	var geometry = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
-	//var texture = new THREE.Texture('textures/transparent.png');
-	var canvas = createTextCanvas(0, 0, "data/0x1/0000");
-	var texture = new THREE.Texture(canvas);
-	texture.needsUpdate = true;
-
-	var material = new THREE.MeshBasicMaterial({
-		map : texture,
-		color : "green"
-		//transparent : true
-	});
-
-
-	leftLabel = new THREE.Mesh(geometry, material);
-	rightLabel = new THREE.Mesh(geometry, material);
-
-
-	leftLabel.position.set(-0.2, 0.25, -0.5);
-	leftLabel.lookAt(new THREE.Vector3(0,0,1) );
-	scene.add(leftLabel);
-	camera.add(leftLabel);
-
-	rightLabel.position.set(0.2, 0.25, -0.5);
-	rightLabel.lookAt(new THREE.Vector3(0,0,1) );
-	scene.add(rightLabel);
-	camera.add(rightLabel);
-
-
-}
-
-
-
 function drawLabels(posL, posR, total, filenameLeft, filenameRight ){
 
 	//var labelGeo = new THREE.PlaneGeometry( 0.75/3, 0.375/3 );
-
+	console.log("drawLabels called");
 
 	leftLabel = createTextMaterial(posL, total, filenameLeft);
 	rightLabel = createTextMaterial(posR, total, filenameRight);
@@ -826,13 +782,13 @@ function drawLabels(posL, posR, total, filenameLeft, filenameRight ){
 	scene.add(rightLabel);
 	camera.add(rightLabel);
 
-	/*clearTimeout(interval);
+	clearTimeout(interval);
 	interval  = setTimeout(function(){
 		//if(leftLabel.visible) {
 			leftLabel.visible = false;
 			rightLabel.visible = false;
 		//}
-	}, 5000);*/
+	}, 5000);
 }
 
 
@@ -893,6 +849,8 @@ function render() {
 
 	var frame = leapController.frame();
 	if (frame.valid && frame.hands.length == 2) {
+		//console.log(rightObj.position);
+		//console.log(leftObj.position);
 
 		if(handError.visible)
 			camera.remove(handError);
@@ -1025,8 +983,8 @@ function leapLoop() {
 	
 	leftTransObj.add(leftObj);
 	rightTransObj.add(rightObj);
-	//
-	drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
+	//drawLabels does not work
+	//drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 	//Delete bottom if performance hit
 	onResize();
 	
