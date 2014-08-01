@@ -14,6 +14,7 @@ var quat, quatCam, xzVector;
 var rightObj, leftObj;
 var rightObjLoaded, leftObjLoaded;
 var rightTransObj, leftTransObj;
+//var rightOrigRotation, leftOrigRotation;
 
 var hydrogenMat = new THREE.MeshLambertMaterial({
 	color: 0xFFFFFF // white
@@ -38,6 +39,7 @@ var defaultMat = new THREE.MeshLambertMaterial( {
 
 //Leap Variables
 var leapController;
+var frame;
 var rightHand, leftHand;
 var rotWorldMatrix;
 var yAxis = new THREE.Vector3(0,1,0);
@@ -49,10 +51,6 @@ var leftLabel = null, rightLabel = null;
 var interval = 0;
 
 //matrix data
-//var comdata;
-//an square matrix of size n where n is the # of files in a specific folder
-
-
 var simMatrix;
 var fileName1, fileName2;
 var objRawData;
@@ -78,6 +76,8 @@ window.onload = function() {
 
 function menu() {
 	this.folder = "";
+	this.explode = function() {resetMoleculePos()};
+	//this.resetPos = "";
 	//possible for future implementation
 	//this.leftMolecule = "";
 	//this.rightMolecule = "";
@@ -105,6 +105,17 @@ function ajaxRequestFolders(dir) {
 		}
 
 	});
+}
+
+function resetMoleculePos() {
+	leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
+	leftTransObj.rotation.set(0,0,0,'XYZ');
+	
+	rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
+	rightTransObj.rotation.set(0,0,0,'XYZ');
+
+	leftObj.rotation.set(0,0,0,'XYZ');
+	rightObj.rotation.set(0,0,0,'XYZ');
 }
 
 
@@ -168,9 +179,7 @@ function ajaxRequestFiles(dir) {
 				lastHand="right";
 				simMatrixRow = 0; 
 				simMatrixCol = 1;
-				leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
-				rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
-
+				resetMoleculePos();
 				simReadData();
 			}
 
@@ -183,7 +192,7 @@ function initMenu() {
 	gui = new dat.GUI();
 	menu = new menu();
 	//gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(updateGUI(newValue));
-	gui.add(menu, "folder", listOfFolders).name("Choose a folder").listen().onFinishChange(function(newValue){
+	gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(function(newValue){
 		if(newValue != "") {
 			prefix = "data/" + newValue +"/";
 			//console.log("updateGUI called: "+newValue);
@@ -191,23 +200,8 @@ function initMenu() {
 			ajaxRequestFiles(prefix);
 			
 		}
-			
 	});
-
-	//gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").listen();//.onFinishChange(function(newValue){
-	/*gui.add(menu, "leftMolecule", listOfFilesInFolder).name("Left Molecule").listen().onFinishChange(function(newValue){
-	    //On select, have load molecule or something...
-	    //On select, have load molecule or something...
-	    //On select, have load molecule or something...
-	    //On select, have load molecule or something...
-	});
-
-	gui.add(menu, "rightMolecule", listOfFilesInFolder).name("Right Molecule").listen().onFinishChange(function(newValue){
-	    //On select, have load molecule or something...
-	    //On select, have load molecule or something...
-	    //On select, have load molecule or something...
-	    //On select, have load molecule or something...
-	});*/
+	gui.add(menu, 'explode').name("Reset position");
 }
 
 function simReadData() {
@@ -388,6 +382,8 @@ function init() {
 	leftTransObj.position = camera.position;
 	rightTransObj.position = camera.position;
 
+	
+
 }
 
 
@@ -519,21 +515,20 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	var tempMesh;
 	
 	for (var i = 0; i < numberOfAtoms; i++) {
-		//var mesh = new THREE.Mesh(geometry, mat);
 		switch(atoms[i][0]) {
 			case "H":
 				tempMesh = new THREE.Mesh(geometry, hydrogenMat);
-				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				tempMesh.position.set(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 				molObj.add(tempMesh);
 				break;
 			case "HO":
 				tempMesh = new THREE.Mesh(geometry, oxygenMat );
-				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				tempMesh.position.set(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 				molObj.add(tempMesh);
 				break;
 			case "O":
 				tempMesh = new THREE.Mesh(geometry, water_oxygenMat );
-				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				tempMesh.position.set(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 				molObj.add(tempMesh);
 				break;
 			case "C":
@@ -541,7 +536,7 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 				break;
 			default:
 				tempMesh = new THREE.Mesh(geometry, defaultMat );
-				tempMesh.position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
+				tempMesh.position.set(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
 				molObj.add(tempMesh);
 				break;
 		}
@@ -700,6 +695,10 @@ function drawObject(filename, object, isLeft){
 
 	}
 
+	//console.log(leftTransObj.rotation.order);
+	//leftOrigRotation = leftTransObj.rotation.clone();
+	//rightOrigRotation = rightTransObj.rotation.clone();
+
 	});
 }
 
@@ -784,10 +783,8 @@ function drawLabels(posL, posR, total, filenameLeft, filenameRight ){
 
 	clearTimeout(interval);
 	interval  = setTimeout(function(){
-		//if(leftLabel.visible) {
-			leftLabel.visible = false;
-			rightLabel.visible = false;
-		//}
+		leftLabel.visible = false;
+		rightLabel.visible = false;
 	}, 5000);
 }
 
@@ -796,7 +793,6 @@ function drawLabels(posL, posR, total, filenameLeft, filenameRight ){
 function createTextCanvas(pos, total, filename) {
 
 	var position = " "+ pos + "/" + total;
-	//var filename = " " + "88888";
 
 	var canvas = document.createElement('canvas');
 	var g = canvas.getContext('2d');
@@ -847,7 +843,7 @@ function initLeap() {
 
 function render() { 
 
-	var frame = leapController.frame();
+	frame = leapController.frame();
 	if (frame.valid && frame.hands.length == 2) {
 		//console.log(rightObj.position);
 		//console.log(leftObj.position);
