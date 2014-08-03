@@ -1,6 +1,6 @@
 /**
- * demo.js
- * Implementation of 3D immersion mode for the CTIANP project.
+ * oculus_leap_visualization.js
+ * Implementation of 3D immersion mode for the CTIANP project with Oculus Rift and LeapMotion controller
  *
  * @author Zeshawn Shaheen
  */
@@ -22,22 +22,21 @@ var quat, quatCam, xzVector;
 var rightObj, leftObj;
 var rightObjLoaded, leftObjLoaded;
 var rightTransObj, leftTransObj;
-//var rightOrigRotation, leftOrigRotation;
 
 var hydrogenMat = new THREE.MeshLambertMaterial({
-	color: 0xFFFFFF // white
+	color: 0xFFFFFF //white
 });
 
 var oxygenMat = new THREE.MeshLambertMaterial({
-	color: 0x0000FF // blue
+	color: 0x0000FF //blue
 });
 
 var water_oxygenMat = new THREE.MeshLambertMaterial({
-	color: 0xDD3333 // red
+	color: 0xDD3333 //red
 });
 
 var carbon_cylinderMat = new THREE.MeshLambertMaterial({
-	color: 0x00FF00 // green
+	color: 0x00FF00 //green
 });
 
 var defaultMat = new THREE.MeshLambertMaterial( { 
@@ -71,7 +70,6 @@ var listOfFolders=[], listOfFilesInFolder=[];
 window.onload = function() {
 	
 	init();
-	//initLabels();;
 	initLeap();
 	initErrors();
 	initOculus();
@@ -82,22 +80,23 @@ window.onload = function() {
 	
 }
 
+
+
 function menu() {
+
 	this.folder = "";
 	this.explode = function() {resetMoleculePos()};
-	//this.resetPos = "";
-	//possible for future implementation
-	//this.leftMolecule = "";
-	//this.rightMolecule = "";
+
 }
 
+
+
 function ajaxRequestFolders(dir) {
+
 	$.ajax({
 
 		type: "POST",
-
 		url: "getFilesInDir.php?dir=" + dir + "%2F",
-
 		dataType: "json",
 
 		success: function(data) {
@@ -115,7 +114,10 @@ function ajaxRequestFolders(dir) {
 	});
 }
 
+
+
 function resetMoleculePos() {
+
 	leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
 	leftTransObj.rotation.set(0,0,0,'XYZ');
 	
@@ -124,31 +126,27 @@ function resetMoleculePos() {
 
 	leftObj.rotation.set(0,0,0,'XYZ');
 	rightObj.rotation.set(0,0,0,'XYZ');
+
 }
 
 
+
 function ajaxRequestFiles(dir) {
+
 	$.ajax({
 
 		type: "POST",
-
 		url: "getFilesInDir.php?dir=" + dir + "%2F",
-
 		dataType: "json",
 
 		success: function(data) {
 
-			//gui.__controllers[2].remove();
-			//gui.__controllers[1].remove();
-
-			//console.log("ajaxRequestFILES success");
 			listOfFilesInFolder = data.split("NF");
-			//console.log("data.split working");
 			//delete the last index which is just ""
 			listOfFilesInFolder.splice(listOfFilesInFolder.length-1, 1);
 			console.log(listOfFilesInFolder);
 
-			//clearTimeout(interval);
+
 			rightLabel.visible = false;
 			leftLabel.visible = false;
 			simMatrix = [];
@@ -161,19 +159,20 @@ function ajaxRequestFiles(dir) {
 			simReadData();
 		}
 
-
 	});
+
 }
 
 
+
 function initMenu() {
+
 	gui = new dat.GUI();
 	menu = new menu();
-	//gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(updateGUI(newValue));
+	
 	gui.add(menu, "folder", listOfFolders).name("Choose a folder").onFinishChange(function(newValue){
 		if(newValue != "") {
 			prefix = "data/" + newValue +"/";
-			//console.log("updateGUI called: "+newValue);
 			
 			ajaxRequestFiles(prefix);
 			
@@ -182,24 +181,18 @@ function initMenu() {
 	gui.add(menu, 'explode').name("Reset position");
 }
 
+
+
 function simReadData() {
 
-
-	//var dirs; // List of directories. ex: 0x1, 0x2, etc.
-	
 	var comdata = [];
 	var tempData, line;
 
 	
-	//dirs = ["0x1","0x2"];
-	//assuming we opened the folder 0x1
-	//listFiles = ["5155", "6288", "6465", "7067", "7392", "7861", "9996"];
 	listFiles = listOfFilesInFolder;
 	console.log	
 
-	//prefix = "data/" + dirs[0]+"/";
 
-	//var comdata = [];
 	for(var i=0; i<listFiles.length; i++) {
 	
 		var get = $.get(prefix+listFiles[i], function(data) {
@@ -209,37 +202,32 @@ function simReadData() {
 			
 			comdata.push( [line[1], line[2], line[3]] );
 		});
+
 	}
 	
 	get.success(function() {
+
 		simCreateMatrix(comdata, listFiles.length);
-		//console.log(simMatrix[0].sortIndices );
+
 		//set fileName1 and fileName2
 		fileName1 = prefix + listFiles[simMatrixRow];
 		fileName2 = prefix + listFiles[ simMatrix[simMatrixRow].sortIndices[simMatrixCol] ];
+		
 		//The left label is always intially 0
-		//
 		drawLabels(0, getIndex(listFiles[simMatrix[0].sortIndices[1]]), listFiles.length-1 ,fileName1, fileName2, "right");
 		draw();
-			
 	});
 }
 
+
+
 function simCreateMatrix(comdata, size) {
-	//console.log(comdata[0]);
-	//console.log(comdata[1])
-	//console.log(euclideanDistance( comdata[0],comdata[1] ));
-	//create the similarity matrix
-	/*
-	* 
-	* 
-	* 
-	*/
+
 	//Make simMatrix a  2d array
 	simMatrix = [];
 	var temp1dArray;// = [];
 	
-	//Can optimize below
+	
 	for(var i=0; i<size; i++) {
 		temp1dArray = [];
 		
@@ -276,19 +264,18 @@ function simCreateMatrix(comdata, size) {
 	*/
 	
 	for(var i=0; i<size; i++) {
-		//console.log("NEW LOOP:" + i)
-		//console.log(simMatrix[i]);
+		
 		sortWithIndeces(simMatrix[i]);
-		//console.log(simMatrix[i]);
 		console.log(simMatrix[i].sortIndices);
+
 	}
-	
-	//Now save simMatrix into a file:
-	//CAN'T DO WITH JAVASCRIPT
 	
 }
 
+
+
 function sortWithIndeces(toSort) {
+
 	//code taken from http://stackoverflow.com/questions/3730510/javascript-sort-array-and-return-an-array-of-indicies-that-indicates-the-positi
 	for (var i = 0; i < toSort.length; i++) {
 		toSort[i] = [toSort[i], i];
@@ -304,7 +291,10 @@ function sortWithIndeces(toSort) {
 		toSort[j] = toSort[j][0];
 	}
 	return toSort;
+
 }
+
+
 
 function euclideanDistance(v1, v2) {
 
@@ -314,13 +304,11 @@ function euclideanDistance(v1, v2) {
 	
 }
 
+
+
 function init() {
 
 	window.addEventListener('resize', onResize, false);
-
-
-	
-
 
 	scene = new THREE.Scene();
 	
@@ -329,7 +317,6 @@ function init() {
 	camera = new THREE.PerspectiveCamera(45, aspectRatio, 1, 10000);
 	camera.useQuaternion = true;
 	camera.position.set(0,0,30);
-	//Can possibly delete camera.lookAt(scene.position);
 	camera.lookAt(scene.position);
 	
 	renderer = new THREE.WebGLRenderer({antialias:true});
@@ -369,7 +356,9 @@ function init() {
 }
 
 
+
 function initOculus() {
+
 	bodyAngle = 0;
 	bodyAxis = new THREE.Vector3(0, 1, 0);
 	quat = new THREE.Quaternion();
@@ -384,24 +373,31 @@ function initOculus() {
 
 	riftCam = new THREE.OculusRiftEffect(renderer);
 	//onResize();
+
 }
+
 
 
 function onResize() {
+
     riftCam.setSize(window.innerWidth, window.innerHeight);
+
 }
+
 
 
 function bridgeConfigUpdated(config){
+
 	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
-	console.log("Oculus config updated.");
 	riftCam.setHMD(config);      
+
 }
 
 
-function bridgeOrientationUpdated(quatValues) {
-	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
 
+function bridgeOrientationUpdated(quatValues) {
+
+	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
 
 	// make a quaternion for the the body angle rotated about the Y axis.
 	quat.setFromAxisAngle(bodyAxis, bodyAngle);
@@ -422,44 +418,13 @@ function bridgeOrientationUpdated(quatValues) {
 
 	// Apply the combined look/body angle to the camera.
 	camera.quaternion.copy(quat);
+
 }
 
-
-
-/*
-function render() { 
-	//try{
-		riftCam.render(scene, camera);
-	/*} catch(e){
-		console.log(e);
-	if(e.name == "SecurityError"){
-		crashSecurity(e);
-	} else {
-		crashOther(e);
-	}
-		return false;
-	}
-	return true;
-}/*
-
-
-/*
-function crashSecurity(e){
-	oculusBridge.disconnect();
-	document.getElementById("viewport").style.display = "none";
-	document.getElementById("security_error").style.display = "block";
-}
-
-function crashOther(e){
-	oculusBridge.disconnect();
-	document.getElementById("viewport").style.display = "none";
-	document.getElementById("generic_error").style.display = "block";
-	document.getElementById("exception_message").innerHTML = e.message;
-}
-*/
 
 
 function rotateAroundWorldAxis(object, axis, radians) {
+
 	//adapted from http://stackoverflow.com/questions/11060734/how-to-rotate-a-3d-object-on-axis-three-js
 	rotWorldMatrix = new THREE.Matrix4();
 	rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
@@ -471,7 +436,9 @@ function rotateAroundWorldAxis(object, axis, radians) {
 }
 
 
+
 function avgPos(data, numberOfAtoms) {
+
 	var position = new THREE.Vector3;
 	var sumX=0, sumY=0, sumZ=0;
 	for (var i = 0; i < numberOfAtoms; i++) {
@@ -484,11 +451,13 @@ function avgPos(data, numberOfAtoms) {
 	position.z = sumZ/numberOfAtoms;
 	
 	return position;
+
 }
 
 
+
 function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
-	//THREE.SphereGeometry(radius, wSegments, hSegments)
+	
 	var geometry = new THREE.SphereGeometry(1, 7, 7);
 	
 	var meshArr = [];
@@ -522,13 +491,9 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 				molObj.add(tempMesh);
 				break;
 		}
-		
-		//change the postion of the atoms relative to the origin
-		//meshArr[i].position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
-		//molObj.add(meshArr[i]);
 	}
+
 	//Now add in the carbon chains
-	
 	for(var i=0; i< cylArray.length-1; i++) { 
 	
 		//get a THREE.Vector3 based on the values in cylArray
@@ -543,13 +508,13 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 }
 
 
+
 function cylinderBetweenPoints(vstart, vend) {
 
 	var HALF_PI = Math.PI * .5;
     var distance = vstart.distanceTo(vend);
     var position  = vend.clone().add(vstart).divideScalar(2);
 
-	//avg_cylinder_len += distance;
 
     var cylinder = new THREE.CylinderGeometry(0.1, 0.1, distance, 8, 1, false);
 
@@ -567,55 +532,16 @@ function cylinderBetweenPoints(vstart, vend) {
     mesh.position = position;
 	
 	// add cylinder to the cylinder array and return the mesh
-	//cylinder_arr.push(mesh);
     return mesh;
 }
 
 
-function removeObjects() {
-	//deletes rightObj, leftObj,  rightTransObj, leftTransObj and all their children
-	/*var obj, i;
-	for ( i = scene.children.length - 1; i >= 0 ; i -- ) {
-	    obj = scene.children[ i ];
-	    if ( obj !== ambient && obj !== camera && obj !== point && obj !== handError ) {
-	        scene.remove(obj);
-	    }
-	}*/
-
-	rightLabel.visible = false;
-	leftLabel.visible = false;
-
-	//scene.remove(rightLabel);
-	//scene.remove(leftLabel);
-
-	var i, obj;
-
-	for ( i = rightObj.children.length - 1; i >= 0 ; i -- ) {
-		obj = rightObj.children[ i ];
-			rightObj.remove(obj);
-	}
-	for ( i = leftObj.children.length - 1; i >= 0 ; i -- ) {
-		obj = leftObj.children[ i ];
-			leftObj.remove(obj);
-	}
-	
-	//rightLabel.position.set(100,100,100);
-	//leftLabel.position.set(100,100,100);
-	
-	//rightLabel.remove(rightLabel.children[0]);
-
-	scene.remove(rightTransObj);
-	scene.remove(leftTransObj);
-	scene.remove(leftObj);
-	scene.remove(rightObj);
-	
-}
 
 function parseDataToAtoms(data, object) {
+
 	var numberOfAtoms = parseInt(data[1]);
 		
 	// create the array to hold the parsed data
-	//console.log(numberOfAtoms);
 	var atoms = new Array(numberOfAtoms);
 	
 	//Each element in parsed[] is an array of 4 
@@ -642,7 +568,8 @@ function parseDataToAtoms(data, object) {
 
 
 function drawObject(filename, object, isLeft){
-//loads an object with the corresponding filename to the object
+
+	//loads an object with the corresponding filename to the object
 
 	//Delete the object and all of its children
 	var obj, canvas = null, texture = null;
@@ -653,10 +580,7 @@ function drawObject(filename, object, isLeft){
 		}
 	}
 
-//currently assuming the object is the right object
-//this.object = new THREE.Object3D();
-
-//open the file:
+	//open the file:
 	var get = $.get(filename, function(data) {
 		// split the data by line
 		objRawData = data.split("\n");
@@ -666,23 +590,22 @@ function drawObject(filename, object, isLeft){
 		//draw the molecules
 		parseDataToAtoms(objRawData, object);
 		
-	if(isLeft) {
-		object.position = new THREE.Vector3(-10,0,-camera.position.z);
-		leftTransObj.add(object);
+		if(isLeft) {
+			object.position = new THREE.Vector3(-10,0,-camera.position.z);
+			leftTransObj.add(object);
 
-	}
-	else {
-		object.position = new THREE.Vector3(10,0,-camera.position.z);
-		rightTransObj.add(object);
+		}
+		else {
+			object.position = new THREE.Vector3(10,0,-camera.position.z);
+			rightTransObj.add(object);
 
-	}
-
-	//console.log(leftTransObj.rotation.order);
-	//leftOrigRotation = leftTransObj.rotation.clone();
-	//rightOrigRotation = rightTransObj.rotation.clone();
+		}
 
 	});
+
 }
+
+
 
 function draw() {
 	
@@ -697,6 +620,7 @@ function draw() {
 
 
 function initErrors() {
+
 	var handsGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
 	//var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
 	var handsTexture = THREE.ImageUtils.loadTexture('textures/nohands.gif');
@@ -717,9 +641,10 @@ function initErrors() {
 	*/
 
 	camera.add(handError);
-	
 	scene.add( camera );	
+
 }
+
 
 
 function drawLabels(posL, posR, total, filenameLeft, filenameRight, handCalled ){
@@ -779,6 +704,8 @@ function createTextCanvas(pos, total, filename, leftOrRight, handCalled) {
 
 }
 
+
+
 function createTextMaterial(pos, total, filename, leftOrRight, handCalled) {
 
 	//applies the text to the geometry
@@ -798,9 +725,12 @@ function createTextMaterial(pos, total, filename, leftOrRight, handCalled) {
 }
 
 
+
 function initLeap() {
+
 	leapController = new Leap.Controller();
 	leapController.connect();
+	
 }
 
 
@@ -825,7 +755,7 @@ function render() {
 		  
 		vRight = rightHand.palmVelocity;
 		vLeft = leftHand.palmVelocity;
-		//console.log(rightObj.position.z);
+
 		switch(rightHand.pointables.length) {
 			case 1:
 				rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
@@ -909,6 +839,7 @@ function render() {
 			camera.add(handError);
 	} 
 	riftCam.render(scene, camera);
+
 }
 
 
@@ -924,6 +855,7 @@ function getIndex(string) {
 }
 
 
+
 function animate() {
 
 	requestAnimationFrame( animate );
@@ -931,6 +863,7 @@ function animate() {
 	render();
 	stats.update();
 }
+
 
 
 function leapLoop() {
@@ -941,8 +874,6 @@ function leapLoop() {
 	
 	leftTransObj.add(leftObj);
 	rightTransObj.add(rightObj);
-	//drawLabels does not work
-	//drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 	//Delete bottom if performance hit
 	onResize();
 	
