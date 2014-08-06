@@ -5,7 +5,14 @@
  * @author Zeshawn Shaheen
  */
 
+/**
+ * @module Oculus-Leap-Visualization
+ *
+ */
 
+/**
+ * @class Oculus-Leap-Visualization
+ */
 //Three.js variables
 var renderer, camera, scene, element;
 var ambient, point;
@@ -66,8 +73,13 @@ var prefix;
 var lastHand="right", simMatrixRow = 0, simMatrixCol = 1;
 var listOfFolders=[], listOfFilesInFolder=[];
 
-
+/**
+ * When the window is loaded, the code will begin.
+ * @method onload
+ */
 window.onload = function() {
+	
+	//ajaxRequestSimMatrix("data/0x1");
 	
 	init();
 	initLeap();
@@ -81,7 +93,10 @@ window.onload = function() {
 }
 
 
-
+/**
+ * Constructor for the menu.
+ * @method menu
+ */
 function menu() {
 
 	this.folder = "";
@@ -91,23 +106,18 @@ function menu() {
 
 
 
-function ajaxRequestFolders(dir) {
+
+function ajaxRequestSimMatrix(dir) {
 
 	$.ajax({
 
 		type: "POST",
-		url: "getFilesInDir.php?dir=" + dir + "%2F",
+		url: "getSimMatrix.php?dir=" + dir + "%2F",
 		dataType: "json",
 
 		success: function(data) {
 
-			listOfFolders = data.split("NF");
-			//delete the last index which is just ""
-			listOfFolders.splice(listOfFolders.length-1, 1);
-			//add a "" in the first index
-			listOfFolders.unshift("");
-			console.log(listOfFolders);
-			initMenu();
+			console.log(data);
 
 		}
 
@@ -115,22 +125,11 @@ function ajaxRequestFolders(dir) {
 }
 
 
-
-function resetMoleculePos() {
-
-	leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
-	leftTransObj.rotation.set(0,0,0,'XYZ');
-	
-	rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
-	rightTransObj.rotation.set(0,0,0,'XYZ');
-
-	leftObj.rotation.set(0,0,0,'XYZ');
-	rightObj.rotation.set(0,0,0,'XYZ');
-
-}
-
-
-
+/**
+ * Sends an AJAX request for the list of files a given folder.
+ * @method ajaxRequestFiles
+ * @param  {String}         dir Path to the folder.
+ */
 function ajaxRequestFiles(dir) {
 
 	$.ajax({
@@ -164,7 +163,58 @@ function ajaxRequestFiles(dir) {
 }
 
 
+/**
+ * Sends an AJAX request for the list of folders in the fort.300_parsed folder.
+ * @method ajaxRequestFolders
+ * @param  {String}           dir Path to the fort.300_parsed folder.
+ */
+function ajaxRequestFolders(dir) {
 
+	$.ajax({
+
+		type: "POST",
+		url: "getFilesInDir.php?dir=" + dir + "%2F",
+		dataType: "json",
+
+		success: function(data) {
+
+			listOfFolders = data.split("NF");
+			//delete the last index which is just ""
+			listOfFolders.splice(listOfFolders.length-1, 1);
+			//add a "" in the first index
+			listOfFolders.unshift("");
+			console.log(listOfFolders);
+			initMenu();
+
+		}
+
+	});
+}
+
+/**
+ * Resets the position and rotation of both molecules to their original location.
+ *
+ * @method resetMoleculePos
+ */
+function resetMoleculePos() {
+
+	leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
+	leftTransObj.rotation.set(0,0,0,'XYZ');
+	
+	rightObj.position = new THREE.Vector3(10,0,-camera.position.z);
+	rightTransObj.rotation.set(0,0,0,'XYZ');
+
+	leftObj.rotation.set(0,0,0,'XYZ');
+	rightObj.rotation.set(0,0,0,'XYZ');
+
+}
+
+
+
+/**
+ * Initializes the menu.
+ * @method initMenu
+ */
 function initMenu() {
 
 	gui = new dat.GUI();
@@ -215,9 +265,17 @@ function simReadData() {
 		
 		//The left label is always intially 0
 		drawLabels(0, getIndex(listFiles[simMatrix[0].sortIndices[1]]), listFiles.length-1 ,fileName1, fileName2, "right");
-		draw();
+		
+		console.log("fileName1_draw: " + fileName1);
+		console.log("fileName2_draw: " + fileName2);
+
+		drawObject(fileName1, leftObj, true);
+		drawObject(fileName2, rightObj, false);
+
 	});
 }
+
+
 
 
 
@@ -305,7 +363,11 @@ function euclideanDistance(v1, v2) {
 }
 
 
-
+/**
+ * Initializes the three.js variables, fps counter, left/right objects and left/right labels.
+ * @method init
+ * @return {[type]} [description]
+ */
 function init() {
 
 	window.addEventListener('resize', onResize, false);
@@ -356,7 +418,10 @@ function init() {
 }
 
 
-
+/**
+ * Creates a connection using the Oculus Bridge software from https://github.com/Instrument/oculus-bridge
+ * @method initOculus
+ */
 function initOculus() {
 
 	bodyAngle = 0;
@@ -377,7 +442,10 @@ function initOculus() {
 }
 
 
-
+/**
+ * Centers the rendering area in the browser. Called when the window is resized. 
+ * @method onResize
+ */
 function onResize() {
 
     riftCam.setSize(window.innerWidth, window.innerHeight);
@@ -385,7 +453,11 @@ function onResize() {
 }
 
 
-
+/**
+ * Updates the Oculus Rift's configuration.
+ * @method bridgeConfigUpdated
+ * @param  {String}            config Holds the configuration information.
+ */
 function bridgeConfigUpdated(config){
 
 	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
@@ -394,7 +466,11 @@ function bridgeConfigUpdated(config){
 }
 
 
-
+/**
+ * Updates the Oculus Rift when the orientation is changed.
+ * @method bridgeOrientationUpdated
+ * @param  {THREE.Quaternion}                 quatValues The quaternion of the current position of the Oculus Rift.
+ */
 function bridgeOrientationUpdated(quatValues) {
 
 	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
@@ -422,7 +498,13 @@ function bridgeOrientationUpdated(quatValues) {
 }
 
 
-
+/**
+ * Rotates the object around the axis (in world coordinates) by a certain amount of radians
+ * @method rotateAroundWorldAxis
+ * @param  {THREE.Object3D}              object  The object that is needed to be rotated.
+ * @param  {THREE.Vector3}              axis    A vector specifying the axis of rotation.
+ * @param  {Float}              radians	The amount in radians that the object will be rotated.
+ */
 function rotateAroundWorldAxis(object, axis, radians) {
 
 	//adapted from http://stackoverflow.com/questions/11060734/how-to-rotate-a-3d-object-on-axis-three-js
@@ -436,7 +518,13 @@ function rotateAroundWorldAxis(object, axis, radians) {
 }
 
 
-
+/**
+ * Returns the average position of the atoms for a given molecule file.
+ * @method avgPos
+ * @param  {Array} data          A n x 4 array where n is the numberOfAtoms.
+ * @param  {Int} numberOfAtoms The number of atoms in the molecule.
+ * @return {THREE.Vector3}               The average position of the molecule in world coordinates.
+ */
 function avgPos(data, numberOfAtoms) {
 
 	var position = new THREE.Vector3;
@@ -455,7 +543,14 @@ function avgPos(data, numberOfAtoms) {
 }
 
 
-
+/**
+ * Draws the molecule to the scene
+ * @method drawMolecule
+ * @param  {Array}     atoms         An n x 4 array where n is the numberOfAtoms.
+ * @param  {Int}     numberOfAtoms The number of atoms in the molecule.
+ * @param  {THREE.Vector3}     atomCenter    A 3 dimensional vector that has the center of the molecule in world coordinates.
+ * @param  {THREE.Object3D}     molObj        The actual object that will be displayed.
+ */
 function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 	
 	var geometry = new THREE.SphereGeometry(1, 7, 7);
@@ -508,7 +603,13 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 }
 
 
-
+/**
+ * Draws a cylinder between two points
+ * @method cylinderBetweenPoints
+ * @param  {THREE.Vector3}              vstart A 3 dimensional vector of the beginning of the cylinder
+ * @param  {THREE.Vector3}              vend   A 3 dimensional vector of the end of the cylinder
+ * @return {THREE.Mesh}                     A mesh of the cylinder that will be added the object
+ */
 function cylinderBetweenPoints(vstart, vend) {
 
 	var HALF_PI = Math.PI * .5;
@@ -536,7 +637,12 @@ function cylinderBetweenPoints(vstart, vend) {
 }
 
 
-
+/**
+ * Parses a file and will update object with the corresponding atoms
+ * @method parseDataToAtoms
+ * @param  {jQuery.PlainObject}         data   The raw data from the file
+ * @param  {THREE.Object3D}         object The object that will be filled with the data
+ */
 function parseDataToAtoms(data, object) {
 
 	var numberOfAtoms = parseInt(data[1]);
@@ -566,7 +672,13 @@ function parseDataToAtoms(data, object) {
 	
 }
 
-
+/**
+ * Starts the chain of function calls that loads the data of a file into an object
+ * @method drawObject
+ * @param  {String}   filename The path to the file with the data.
+ * @param  {THREE.Object#d}   object   The object that will be filled with data
+ * @param  {Boolean}  isLeft   If true, 'object' is the left object. If false, 'object' is the right object.
+ */
 function drawObject(filename, object, isLeft){
 
 	//loads an object with the corresponding filename to the object
@@ -607,18 +719,12 @@ function drawObject(filename, object, isLeft){
 
 
 
-function draw() {
-	
-	console.log("fileName1_draw: " + fileName1);
-	console.log("fileName2_draw: " + fileName2);
-
-	drawObject(fileName1, leftObj, true);
-	drawObject(fileName2, rightObj, false);
-	
-}
 
 
-
+/**
+ * Initializes the error labels
+ * @method initErrors
+ */
 function initErrors() {
 
 	var handsGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
@@ -725,7 +831,10 @@ function createTextMaterial(pos, total, filename, leftOrRight, handCalled) {
 }
 
 
-
+/**
+ * Initializes the Leap Motion Controller
+ * @method initLeap
+ */
 function initLeap() {
 
 	leapController = new Leap.Controller();
@@ -734,7 +843,10 @@ function initLeap() {
 }
 
 
-
+/**
+ * The main rendering function. It also hands input from the Leap Motion Controller.
+ * @method render
+ */
 function render() { 
 
 	frame = leapController.frame();
@@ -843,8 +955,14 @@ function render() {
 }
 
 
-
+/**
+ * Given the name of a file in a folder, it returns the original index of that file.
+ * @method getIndex
+ * @param  {String} string The name of the file.
+ * @return {Int}        The position of the file relative to the parent folder.
+ */
 function getIndex(string) {
+
 	for(var i=0; i<listFiles.length; i++) {
 		if(listFiles[i] == string)
 			return i;
@@ -855,7 +973,10 @@ function getIndex(string) {
 }
 
 
-
+/**
+ * The function that calls the render function.
+ * @method animate
+ */
 function animate() {
 
 	requestAnimationFrame( animate );
@@ -865,7 +986,10 @@ function animate() {
 }
 
 
-
+/**
+ * Adds ability of the left and right objects to rotate and  starts the renderer. 
+ * @method leapLoop
+ */
 function leapLoop() {
 	
 	var vRight, vLeft;

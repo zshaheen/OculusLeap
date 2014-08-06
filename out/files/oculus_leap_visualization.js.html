@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>demo.js</title>
+    <title>oculus_leap_visualization.js</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -41,9 +41,13 @@
         <div id="api-tabview-panel">
             <ul id="api-classes" class="apis classes">
             
+                <li><a href="../classes/Oculus-Leap-Visualization.html">Oculus-Leap-Visualization</a></li>
+            
             </ul>
 
             <ul id="api-modules" class="apis modules">
+            
+                <li><a href="../modules/Oculus-Leap-Visualization.html">Oculus-Leap-Visualization</a></li>
             
             </ul>
         </div>
@@ -80,18 +84,25 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: demo.js</h1>
+                        <h1 class="file-heading">File: oculus_leap_visualization.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
 /**
- * demo.js
- * Implementation of 3D immersion mode for the CTIANP project.
+ * oculus_leap_visualization.js
+ * Implementation of 3D immersion mode for the CTIANP project with Oculus Rift and LeapMotion controller
  *
- * @author Zeshawn Shaheen edit...
+ * @author Zeshawn Shaheen
  */
 
+/**
+ * @module Oculus-Leap-Visualization
+ *
+ */
 
+/**
+ * @class Oculus-Leap-Visualization
+ */
 //Three.js variables
 var renderer, camera, scene, element;
 var ambient, point;
@@ -108,22 +119,21 @@ var quat, quatCam, xzVector;
 var rightObj, leftObj;
 var rightObjLoaded, leftObjLoaded;
 var rightTransObj, leftTransObj;
-//var rightOrigRotation, leftOrigRotation;
 
 var hydrogenMat = new THREE.MeshLambertMaterial({
-	color: 0xFFFFFF // white
+	color: 0xFFFFFF //white
 });
 
 var oxygenMat = new THREE.MeshLambertMaterial({
-	color: 0x0000FF // blue
+	color: 0x0000FF //blue
 });
 
 var water_oxygenMat = new THREE.MeshLambertMaterial({
-	color: 0xDD3333 // red
+	color: 0xDD3333 //red
 });
 
 var carbon_cylinderMat = new THREE.MeshLambertMaterial({
-	color: 0x00FF00 // green
+	color: 0x00FF00 //green
 });
 
 var defaultMat = new THREE.MeshLambertMaterial( { 
@@ -153,11 +163,15 @@ var prefix;
 var lastHand=&quot;right&quot;, simMatrixRow = 0, simMatrixCol = 1;
 var listOfFolders=[], listOfFilesInFolder=[];
 
-
+/**
+ * When the window is loaded, the code will begin.
+ * @method onload
+ */
 window.onload = function() {
 	
+	//ajaxRequestSimMatrix(&quot;data/0x1&quot;);
+	
 	init();
-	//initLabels();;
 	initLeap();
 	initErrors();
 	initOculus();
@@ -168,22 +182,88 @@ window.onload = function() {
 	
 }
 
+
+/**
+ * Constructor for the menu.
+ * @method menu
+ */
 function menu() {
+
 	this.folder = &quot;&quot;;
 	this.explode = function() {resetMoleculePos()};
-	//this.resetPos = &quot;&quot;;
-	//possible for future implementation
-	//this.leftMolecule = &quot;&quot;;
-	//this.rightMolecule = &quot;&quot;;
+
 }
 
-function ajaxRequestFolders(dir) {
+
+
+
+function ajaxRequestSimMatrix(dir) {
+
 	$.ajax({
 
 		type: &quot;POST&quot;,
+		url: &quot;getSimMatrix.php?dir=&quot; + dir + &quot;%2F&quot;,
+		dataType: &quot;json&quot;,
 
+		success: function(data) {
+
+			console.log(data);
+
+		}
+
+	});
+}
+
+
+/**
+ * Sends an AJAX request for the list of files a given folder.
+ * @method ajaxRequestFiles
+ * @param  {String}         dir Path to the folder.
+ */
+function ajaxRequestFiles(dir) {
+
+	$.ajax({
+
+		type: &quot;POST&quot;,
 		url: &quot;getFilesInDir.php?dir=&quot; + dir + &quot;%2F&quot;,
+		dataType: &quot;json&quot;,
 
+		success: function(data) {
+
+			listOfFilesInFolder = data.split(&quot;NF&quot;);
+			//delete the last index which is just &quot;&quot;
+			listOfFilesInFolder.splice(listOfFilesInFolder.length-1, 1);
+			console.log(listOfFilesInFolder);
+
+
+			rightLabel.visible = false;
+			leftLabel.visible = false;
+			simMatrix = [];
+			objRawData = [];
+			listFiles = [];
+			lastHand=&quot;right&quot;;
+			simMatrixRow = 0; 
+			simMatrixCol = 1;
+			resetMoleculePos();
+			simReadData();
+		}
+
+	});
+
+}
+
+
+/**
+ * Sends an AJAX request for the list of folders in the fort.300_parsed folder.
+ * @method ajaxRequestFolders
+ * @param  {String}           dir Path to the fort.300_parsed folder.
+ */
+function ajaxRequestFolders(dir) {
+
+	$.ajax({
+
+		type: &quot;POST&quot;,
+		url: &quot;getFilesInDir.php?dir=&quot; + dir + &quot;%2F&quot;,
 		dataType: &quot;json&quot;,
 
 		success: function(data) {
@@ -201,7 +281,13 @@ function ajaxRequestFolders(dir) {
 	});
 }
 
+/**
+ * Resets the position and rotation of both molecules to their original location.
+ *
+ * @method resetMoleculePos
+ */
 function resetMoleculePos() {
+
 	leftObj.position = new THREE.Vector3(-10,0,-camera.position.z);
 	leftTransObj.rotation.set(0,0,0,&#x27;XYZ&#x27;);
 	
@@ -210,56 +296,23 @@ function resetMoleculePos() {
 
 	leftObj.rotation.set(0,0,0,&#x27;XYZ&#x27;);
 	rightObj.rotation.set(0,0,0,&#x27;XYZ&#x27;);
+
 }
 
 
-function ajaxRequestFiles(dir) {
-	$.ajax({
 
-		type: &quot;POST&quot;,
-
-		url: &quot;getFilesInDir.php?dir=&quot; + dir + &quot;%2F&quot;,
-
-		dataType: &quot;json&quot;,
-
-		success: function(data) {
-
-			//gui.__controllers[2].remove();
-			//gui.__controllers[1].remove();
-
-			//console.log(&quot;ajaxRequestFILES success&quot;);
-			listOfFilesInFolder = data.split(&quot;NF&quot;);
-			//console.log(&quot;data.split working&quot;);
-			//delete the last index which is just &quot;&quot;
-			listOfFilesInFolder.splice(listOfFilesInFolder.length-1, 1);
-			console.log(listOfFilesInFolder);
-
-			//clearTimeout(interval);
-			rightLabel.visible = false;
-			leftLabel.visible = false;
-			simMatrix = [];
-			objRawData = [];
-			listFiles = [];
-			lastHand=&quot;right&quot;;
-			simMatrixRow = 0; 
-			simMatrixCol = 1;
-			resetMoleculePos();
-			simReadData();
-		}
-
-
-	});
-}
-
-
+/**
+ * Initializes the menu.
+ * @method initMenu
+ */
 function initMenu() {
+
 	gui = new dat.GUI();
 	menu = new menu();
-	//gui.add(menu, &quot;folder&quot;, listOfFolders).name(&quot;Choose a folder&quot;).onFinishChange(updateGUI(newValue));
+	
 	gui.add(menu, &quot;folder&quot;, listOfFolders).name(&quot;Choose a folder&quot;).onFinishChange(function(newValue){
 		if(newValue != &quot;&quot;) {
 			prefix = &quot;data/&quot; + newValue +&quot;/&quot;;
-			//console.log(&quot;updateGUI called: &quot;+newValue);
 			
 			ajaxRequestFiles(prefix);
 			
@@ -268,24 +321,18 @@ function initMenu() {
 	gui.add(menu, &#x27;explode&#x27;).name(&quot;Reset position&quot;);
 }
 
+
+
 function simReadData() {
 
-
-	//var dirs; // List of directories. ex: 0x1, 0x2, etc.
-	
 	var comdata = [];
 	var tempData, line;
 
 	
-	//dirs = [&quot;0x1&quot;,&quot;0x2&quot;];
-	//assuming we opened the folder 0x1
-	//listFiles = [&quot;5155&quot;, &quot;6288&quot;, &quot;6465&quot;, &quot;7067&quot;, &quot;7392&quot;, &quot;7861&quot;, &quot;9996&quot;];
 	listFiles = listOfFilesInFolder;
 	console.log	
 
-	//prefix = &quot;data/&quot; + dirs[0]+&quot;/&quot;;
 
-	//var comdata = [];
 	for(var i=0; i&lt;listFiles.length; i++) {
 	
 		var get = $.get(prefix+listFiles[i], function(data) {
@@ -295,37 +342,40 @@ function simReadData() {
 			
 			comdata.push( [line[1], line[2], line[3]] );
 		});
+
 	}
 	
 	get.success(function() {
+
 		simCreateMatrix(comdata, listFiles.length);
-		//console.log(simMatrix[0].sortIndices );
+
 		//set fileName1 and fileName2
 		fileName1 = prefix + listFiles[simMatrixRow];
 		fileName2 = prefix + listFiles[ simMatrix[simMatrixRow].sortIndices[simMatrixCol] ];
+		
 		//The left label is always intially 0
-		//
 		drawLabels(0, getIndex(listFiles[simMatrix[0].sortIndices[1]]), listFiles.length-1 ,fileName1, fileName2, &quot;right&quot;);
-		draw();
-			
+		
+		console.log(&quot;fileName1_draw: &quot; + fileName1);
+		console.log(&quot;fileName2_draw: &quot; + fileName2);
+
+		drawObject(fileName1, leftObj, true);
+		drawObject(fileName2, rightObj, false);
+
 	});
 }
 
+
+
+
+
 function simCreateMatrix(comdata, size) {
-	//console.log(comdata[0]);
-	//console.log(comdata[1])
-	//console.log(euclideanDistance( comdata[0],comdata[1] ));
-	//create the similarity matrix
-	/*
-	* 
-	* 
-	* 
-	*/
+
 	//Make simMatrix a  2d array
 	simMatrix = [];
 	var temp1dArray;// = [];
 	
-	//Can optimize below
+	
 	for(var i=0; i&lt;size; i++) {
 		temp1dArray = [];
 		
@@ -362,19 +412,18 @@ function simCreateMatrix(comdata, size) {
 	*/
 	
 	for(var i=0; i&lt;size; i++) {
-		//console.log(&quot;NEW LOOP:&quot; + i)
-		//console.log(simMatrix[i]);
+		
 		sortWithIndeces(simMatrix[i]);
-		//console.log(simMatrix[i]);
 		console.log(simMatrix[i].sortIndices);
+
 	}
-	
-	//Now save simMatrix into a file:
-	//CAN&#x27;T DO WITH JAVASCRIPT
 	
 }
 
+
+
 function sortWithIndeces(toSort) {
+
 	//code taken from http://stackoverflow.com/questions/3730510/javascript-sort-array-and-return-an-array-of-indicies-that-indicates-the-positi
 	for (var i = 0; i &lt; toSort.length; i++) {
 		toSort[i] = [toSort[i], i];
@@ -390,7 +439,10 @@ function sortWithIndeces(toSort) {
 		toSort[j] = toSort[j][0];
 	}
 	return toSort;
+
 }
+
+
 
 function euclideanDistance(v1, v2) {
 
@@ -400,13 +452,15 @@ function euclideanDistance(v1, v2) {
 	
 }
 
+
+/**
+ * Initializes the three.js variables, fps counter, left/right objects and left/right labels.
+ * @method init
+ * @return {[type]} [description]
+ */
 function init() {
 
 	window.addEventListener(&#x27;resize&#x27;, onResize, false);
-
-
-	
-
 
 	scene = new THREE.Scene();
 	
@@ -415,7 +469,6 @@ function init() {
 	camera = new THREE.PerspectiveCamera(45, aspectRatio, 1, 10000);
 	camera.useQuaternion = true;
 	camera.position.set(0,0,30);
-	//Can possibly delete camera.lookAt(scene.position);
 	camera.lookAt(scene.position);
 	
 	renderer = new THREE.WebGLRenderer({antialias:true});
@@ -455,7 +508,12 @@ function init() {
 }
 
 
+/**
+ * Creates a connection using the Oculus Bridge software from https://github.com/Instrument/oculus-bridge
+ * @method initOculus
+ */
 function initOculus() {
+
 	bodyAngle = 0;
 	bodyAxis = new THREE.Vector3(0, 1, 0);
 	quat = new THREE.Quaternion();
@@ -470,24 +528,42 @@ function initOculus() {
 
 	riftCam = new THREE.OculusRiftEffect(renderer);
 	//onResize();
+
 }
 
 
+/**
+ * Centers the rendering area in the browser. Called when the window is resized. 
+ * @method onResize
+ */
 function onResize() {
+
     riftCam.setSize(window.innerWidth, window.innerHeight);
+
 }
 
 
+/**
+ * Updates the Oculus Rift&#x27;s configuration.
+ * @method bridgeConfigUpdated
+ * @param  {String}            config Holds the configuration information.
+ */
 function bridgeConfigUpdated(config){
+
 	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
-	console.log(&quot;Oculus config updated.&quot;);
 	riftCam.setHMD(config);      
+
 }
 
 
+/**
+ * Updates the Oculus Rift when the orientation is changed.
+ * @method bridgeOrientationUpdated
+ * @param  {THREE.Quaternion}                 quatValues The quaternion of the current position of the Oculus Rift.
+ */
 function bridgeOrientationUpdated(quatValues) {
-	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
 
+	//Code adapted from OculusBridge examples: https://github.com/Instrument/oculus-bridge
 
 	// make a quaternion for the the body angle rotated about the Y axis.
 	quat.setFromAxisAngle(bodyAxis, bodyAngle);
@@ -508,44 +584,19 @@ function bridgeOrientationUpdated(quatValues) {
 
 	// Apply the combined look/body angle to the camera.
 	camera.quaternion.copy(quat);
+
 }
 
 
-
-/*
-function render() { 
-	//try{
-		riftCam.render(scene, camera);
-	/*} catch(e){
-		console.log(e);
-	if(e.name == &quot;SecurityError&quot;){
-		crashSecurity(e);
-	} else {
-		crashOther(e);
-	}
-		return false;
-	}
-	return true;
-}/*
-
-
-/*
-function crashSecurity(e){
-	oculusBridge.disconnect();
-	document.getElementById(&quot;viewport&quot;).style.display = &quot;none&quot;;
-	document.getElementById(&quot;security_error&quot;).style.display = &quot;block&quot;;
-}
-
-function crashOther(e){
-	oculusBridge.disconnect();
-	document.getElementById(&quot;viewport&quot;).style.display = &quot;none&quot;;
-	document.getElementById(&quot;generic_error&quot;).style.display = &quot;block&quot;;
-	document.getElementById(&quot;exception_message&quot;).innerHTML = e.message;
-}
-*/
-
-
+/**
+ * Rotates the object around the axis (in world coordinates) by a certain amount of radians
+ * @method rotateAroundWorldAxis
+ * @param  {THREE.Object3D}              object  The object that is needed to be rotated.
+ * @param  {THREE.Vector3}              axis    A vector specifying the axis of rotation.
+ * @param  {Float}              radians	The amount in radians that the object will be rotated.
+ */
 function rotateAroundWorldAxis(object, axis, radians) {
+
 	//adapted from http://stackoverflow.com/questions/11060734/how-to-rotate-a-3d-object-on-axis-three-js
 	rotWorldMatrix = new THREE.Matrix4();
 	rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
@@ -557,7 +608,15 @@ function rotateAroundWorldAxis(object, axis, radians) {
 }
 
 
+/**
+ * Returns the average position of the atoms for a given molecule file.
+ * @method avgPos
+ * @param  {Array} data          A n x 4 array where n is the numberOfAtoms.
+ * @param  {Int} numberOfAtoms The number of atoms in the molecule.
+ * @return {THREE.Vector3}               The average position of the molecule in world coordinates.
+ */
 function avgPos(data, numberOfAtoms) {
+
 	var position = new THREE.Vector3;
 	var sumX=0, sumY=0, sumZ=0;
 	for (var i = 0; i &lt; numberOfAtoms; i++) {
@@ -570,11 +629,20 @@ function avgPos(data, numberOfAtoms) {
 	position.z = sumZ/numberOfAtoms;
 	
 	return position;
+
 }
 
 
+/**
+ * Draws the molecule to the scene
+ * @method drawMolecule
+ * @param  {Array}     atoms         An n x 4 array where n is the numberOfAtoms.
+ * @param  {Int}     numberOfAtoms The number of atoms in the molecule.
+ * @param  {THREE.Vector3}     atomCenter    A 3 dimensional vector that has the center of the molecule in world coordinates.
+ * @param  {THREE.Object3D}     molObj        The actual object that will be displayed.
+ */
 function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
-	//THREE.SphereGeometry(radius, wSegments, hSegments)
+	
 	var geometry = new THREE.SphereGeometry(1, 7, 7);
 	
 	var meshArr = [];
@@ -608,13 +676,9 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 				molObj.add(tempMesh);
 				break;
 		}
-		
-		//change the postion of the atoms relative to the origin
-		//meshArr[i].position = new THREE.Vector3(atoms[i][1]-atomCenter.x, atoms[i][2]-atomCenter.y, atoms[i][3]-atomCenter.z);
-		//molObj.add(meshArr[i]);
 	}
+
 	//Now add in the carbon chains
-	
 	for(var i=0; i&lt; cylArray.length-1; i++) { 
 	
 		//get a THREE.Vector3 based on the values in cylArray
@@ -629,13 +693,19 @@ function drawMolecule(atoms, numberOfAtoms, atomCenter, molObj) {
 }
 
 
+/**
+ * Draws a cylinder between two points
+ * @method cylinderBetweenPoints
+ * @param  {THREE.Vector3}              vstart A 3 dimensional vector of the beginning of the cylinder
+ * @param  {THREE.Vector3}              vend   A 3 dimensional vector of the end of the cylinder
+ * @return {THREE.Mesh}                     A mesh of the cylinder that will be added the object
+ */
 function cylinderBetweenPoints(vstart, vend) {
 
 	var HALF_PI = Math.PI * .5;
     var distance = vstart.distanceTo(vend);
     var position  = vend.clone().add(vstart).divideScalar(2);
 
-	//avg_cylinder_len += distance;
 
     var cylinder = new THREE.CylinderGeometry(0.1, 0.1, distance, 8, 1, false);
 
@@ -653,55 +723,21 @@ function cylinderBetweenPoints(vstart, vend) {
     mesh.position = position;
 	
 	// add cylinder to the cylinder array and return the mesh
-	//cylinder_arr.push(mesh);
     return mesh;
 }
 
 
-function removeObjects() {
-	//deletes rightObj, leftObj,  rightTransObj, leftTransObj and all their children
-	/*var obj, i;
-	for ( i = scene.children.length - 1; i &gt;= 0 ; i -- ) {
-	    obj = scene.children[ i ];
-	    if ( obj !== ambient &amp;&amp; obj !== camera &amp;&amp; obj !== point &amp;&amp; obj !== handError ) {
-	        scene.remove(obj);
-	    }
-	}*/
-
-	rightLabel.visible = false;
-	leftLabel.visible = false;
-
-	//scene.remove(rightLabel);
-	//scene.remove(leftLabel);
-
-	var i, obj;
-
-	for ( i = rightObj.children.length - 1; i &gt;= 0 ; i -- ) {
-		obj = rightObj.children[ i ];
-			rightObj.remove(obj);
-	}
-	for ( i = leftObj.children.length - 1; i &gt;= 0 ; i -- ) {
-		obj = leftObj.children[ i ];
-			leftObj.remove(obj);
-	}
-	
-	//rightLabel.position.set(100,100,100);
-	//leftLabel.position.set(100,100,100);
-	
-	//rightLabel.remove(rightLabel.children[0]);
-
-	scene.remove(rightTransObj);
-	scene.remove(leftTransObj);
-	scene.remove(leftObj);
-	scene.remove(rightObj);
-	
-}
-
+/**
+ * Parses a file and will update object with the corresponding atoms
+ * @method parseDataToAtoms
+ * @param  {jQuery.PlainObject}         data   The raw data from the file
+ * @param  {THREE.Object3D}         object The object that will be filled with the data
+ */
 function parseDataToAtoms(data, object) {
+
 	var numberOfAtoms = parseInt(data[1]);
 		
 	// create the array to hold the parsed data
-	//console.log(numberOfAtoms);
 	var atoms = new Array(numberOfAtoms);
 	
 	//Each element in parsed[] is an array of 4 
@@ -726,9 +762,16 @@ function parseDataToAtoms(data, object) {
 	
 }
 
-
+/**
+ * Starts the chain of function calls that loads the data of a file into an object
+ * @method drawObject
+ * @param  {String}   filename The path to the file with the data.
+ * @param  {THREE.Object#d}   object   The object that will be filled with data
+ * @param  {Boolean}  isLeft   If true, &#x27;object&#x27; is the left object. If false, &#x27;object&#x27; is the right object.
+ */
 function drawObject(filename, object, isLeft){
-//loads an object with the corresponding filename to the object
+
+	//loads an object with the corresponding filename to the object
 
 	//Delete the object and all of its children
 	var obj, canvas = null, texture = null;
@@ -739,10 +782,7 @@ function drawObject(filename, object, isLeft){
 		}
 	}
 
-//currently assuming the object is the right object
-//this.object = new THREE.Object3D();
-
-//open the file:
+	//open the file:
 	var get = $.get(filename, function(data) {
 		// split the data by line
 		objRawData = data.split(&quot;\n&quot;);
@@ -752,37 +792,31 @@ function drawObject(filename, object, isLeft){
 		//draw the molecules
 		parseDataToAtoms(objRawData, object);
 		
-	if(isLeft) {
-		object.position = new THREE.Vector3(-10,0,-camera.position.z);
-		leftTransObj.add(object);
+		if(isLeft) {
+			object.position = new THREE.Vector3(-10,0,-camera.position.z);
+			leftTransObj.add(object);
 
-	}
-	else {
-		object.position = new THREE.Vector3(10,0,-camera.position.z);
-		rightTransObj.add(object);
+		}
+		else {
+			object.position = new THREE.Vector3(10,0,-camera.position.z);
+			rightTransObj.add(object);
 
-	}
-
-	//console.log(leftTransObj.rotation.order);
-	//leftOrigRotation = leftTransObj.rotation.clone();
-	//rightOrigRotation = rightTransObj.rotation.clone();
+		}
 
 	});
-}
 
-function draw() {
-	
-	console.log(&quot;fileName1_draw: &quot; + fileName1);
-	console.log(&quot;fileName2_draw: &quot; + fileName2);
-
-	drawObject(fileName1, leftObj, true);
-	drawObject(fileName2, rightObj, false);
-	
 }
 
 
 
+
+
+/**
+ * Initializes the error labels
+ * @method initErrors
+ */
 function initErrors() {
+
 	var handsGeo = new THREE.PlaneGeometry( 0.75/1.5, 0.375/1.5 );
 	//var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
 	var handsTexture = THREE.ImageUtils.loadTexture(&#x27;textures/nohands.gif&#x27;);
@@ -803,9 +837,10 @@ function initErrors() {
 	*/
 
 	camera.add(handError);
-	
 	scene.add( camera );	
+
 }
+
 
 
 function drawLabels(posL, posR, total, filenameLeft, filenameRight, handCalled ){
@@ -865,6 +900,8 @@ function createTextCanvas(pos, total, filename, leftOrRight, handCalled) {
 
 }
 
+
+
 function createTextMaterial(pos, total, filename, leftOrRight, handCalled) {
 
 	//applies the text to the geometry
@@ -884,13 +921,22 @@ function createTextMaterial(pos, total, filename, leftOrRight, handCalled) {
 }
 
 
+/**
+ * Initializes the Leap Motion Controller
+ * @method initLeap
+ */
 function initLeap() {
+
 	leapController = new Leap.Controller();
 	leapController.connect();
+	
 }
 
 
-
+/**
+ * The main rendering function. It also hands input from the Leap Motion Controller.
+ * @method render
+ */
 function render() { 
 
 	frame = leapController.frame();
@@ -911,7 +957,7 @@ function render() {
 		  
 		vRight = rightHand.palmVelocity;
 		vLeft = leftHand.palmVelocity;
-		//console.log(rightObj.position.z);
+
 		switch(rightHand.pointables.length) {
 			case 1:
 				rotateAroundWorldAxis(rightTransObj, yAxis,  (-vRight[0]/50)* Math.PI/180);
@@ -995,11 +1041,18 @@ function render() {
 			camera.add(handError);
 	} 
 	riftCam.render(scene, camera);
+
 }
 
 
-
+/**
+ * Given the name of a file in a folder, it returns the original index of that file.
+ * @method getIndex
+ * @param  {String} string The name of the file.
+ * @return {Int}        The position of the file relative to the parent folder.
+ */
 function getIndex(string) {
+
 	for(var i=0; i&lt;listFiles.length; i++) {
 		if(listFiles[i] == string)
 			return i;
@@ -1010,6 +1063,10 @@ function getIndex(string) {
 }
 
 
+/**
+ * The function that calls the render function.
+ * @method animate
+ */
 function animate() {
 
 	requestAnimationFrame( animate );
@@ -1019,6 +1076,10 @@ function animate() {
 }
 
 
+/**
+ * Adds ability of the left and right objects to rotate and  starts the renderer. 
+ * @method leapLoop
+ */
 function leapLoop() {
 	
 	var vRight, vLeft;
@@ -1027,8 +1088,6 @@ function leapLoop() {
 	
 	leftTransObj.add(leftObj);
 	rightTransObj.add(rightObj);
-	//drawLabels does not work
-	//drawLabels(0, 0, listFiles.length-1 ,fileName1, fileName2);
 	//Delete bottom if performance hit
 	onResize();
 	

@@ -8,29 +8,410 @@
             "fors": {},
             "namespaces": {}
         },
-        "demo.js": {
-            "name": "demo.js",
-            "modules": {},
-            "classes": {},
+        "oculus_leap_visualization.js": {
+            "name": "oculus_leap_visualization.js",
+            "modules": {
+                "Oculus-Leap-Visualization": 1
+            },
+            "classes": {
+                "Oculus-Leap-Visualization": 1
+            },
             "fors": {},
             "namespaces": {}
         }
     },
-    "modules": {},
-    "classes": {},
+    "modules": {
+        "Oculus-Leap-Visualization": {
+            "name": "Oculus-Leap-Visualization",
+            "submodules": {},
+            "classes": {
+                "Oculus-Leap-Visualization": 1
+            },
+            "fors": {},
+            "namespaces": {},
+            "tag": "module",
+            "file": "oculus_leap_visualization.js",
+            "line": 13
+        }
+    },
+    "classes": {
+        "Oculus-Leap-Visualization": {
+            "name": "Oculus-Leap-Visualization",
+            "shortname": "Oculus-Leap-Visualization",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Oculus-Leap-Visualization",
+            "namespace": "",
+            "file": "oculus_leap_visualization.js",
+            "line": 13
+        }
+    },
     "classitems": [
         {
             "file": "lib\\RiftCamera.js",
             "line": 1,
             "author": "troffmo5 / http://github.com/troffmo5\n\nEffect to render the scene in stereo 3d side by side with lens distortion.\nIt is written to be used with the Oculus Rift (http://www.oculusvr.com/) but\nit works also with other HMD using the same technology",
-            "class": ""
+            "class": "Oculus-Leap-Visualization"
         },
         {
-            "file": "demo.js",
+            "file": "oculus_leap_visualization.js",
             "line": 1,
-            "description": "demo.js\nImplementation of 3D immersion mode for the CTIANP project.",
-            "author": "Zeshawn Shaheen edit...",
-            "class": ""
+            "description": "oculus_leap_visualization.js\nImplementation of 3D immersion mode for the CTIANP project with Oculus Rift and LeapMotion controller",
+            "author": "Zeshawn Shaheen",
+            "class": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 76,
+            "description": "When the window is loaded, the code will begin.",
+            "itemtype": "method",
+            "name": "onload",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 96,
+            "description": "Constructor for the menu.",
+            "itemtype": "method",
+            "name": "menu",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 128,
+            "description": "Sends an AJAX request for the list of files a given folder.",
+            "itemtype": "method",
+            "name": "ajaxRequestFiles",
+            "params": [
+                {
+                    "name": "dir",
+                    "description": "Path to the folder.",
+                    "type": "String"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 166,
+            "description": "Sends an AJAX request for the list of folders in the fort.300_parsed folder.",
+            "itemtype": "method",
+            "name": "ajaxRequestFolders",
+            "params": [
+                {
+                    "name": "dir",
+                    "description": "Path to the fort.300_parsed folder.",
+                    "type": "String"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 194,
+            "description": "Resets the position and rotation of both molecules to their original location.",
+            "itemtype": "method",
+            "name": "resetMoleculePos",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 214,
+            "description": "Initializes the menu.",
+            "itemtype": "method",
+            "name": "initMenu",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 366,
+            "description": "Initializes the three.js variables, fps counter, left/right objects and left/right labels.",
+            "itemtype": "method",
+            "name": "init",
+            "return": {
+                "description": "[description]",
+                "type": "[type]"
+            },
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 421,
+            "description": "Creates a connection using the Oculus Bridge software from https://github.com/Instrument/oculus-bridge",
+            "itemtype": "method",
+            "name": "initOculus",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 445,
+            "description": "Centers the rendering area in the browser. Called when the window is resized.",
+            "itemtype": "method",
+            "name": "onResize",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 456,
+            "description": "Updates the Oculus Rift's configuration.",
+            "itemtype": "method",
+            "name": "bridgeConfigUpdated",
+            "params": [
+                {
+                    "name": "config",
+                    "description": "Holds the configuration information.",
+                    "type": "String"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 469,
+            "description": "Updates the Oculus Rift when the orientation is changed.",
+            "itemtype": "method",
+            "name": "bridgeOrientationUpdated",
+            "params": [
+                {
+                    "name": "quatValues",
+                    "description": "The quaternion of the current position of the Oculus Rift.",
+                    "type": "THREE.Quaternion"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 501,
+            "description": "Rotates the object around the axis (in world coordinates) by a certain amount of radians",
+            "itemtype": "method",
+            "name": "rotateAroundWorldAxis",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "The object that is needed to be rotated.",
+                    "type": "THREE.Object3D"
+                },
+                {
+                    "name": "axis",
+                    "description": "A vector specifying the axis of rotation.",
+                    "type": "THREE.Vector3"
+                },
+                {
+                    "name": "radians",
+                    "description": "The amount in radians that the object will be rotated.",
+                    "type": "Float"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 521,
+            "description": "Returns the average position of the atoms for a given molecule file.",
+            "itemtype": "method",
+            "name": "avgPos",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "A n x 4 array where n is the numberOfAtoms.",
+                    "type": "Array"
+                },
+                {
+                    "name": "numberOfAtoms",
+                    "description": "The number of atoms in the molecule.",
+                    "type": "Int"
+                }
+            ],
+            "return": {
+                "description": "The average position of the molecule in world coordinates.",
+                "type": "THREE.Vector3"
+            },
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 546,
+            "description": "Draws the molecule to the scene",
+            "itemtype": "method",
+            "name": "drawMolecule",
+            "params": [
+                {
+                    "name": "atoms",
+                    "description": "An n x 4 array where n is the numberOfAtoms.",
+                    "type": "Array"
+                },
+                {
+                    "name": "numberOfAtoms",
+                    "description": "The number of atoms in the molecule.",
+                    "type": "Int"
+                },
+                {
+                    "name": "atomCenter",
+                    "description": "A 3 dimensional vector that has the center of the molecule in world coordinates.",
+                    "type": "THREE.Vector3"
+                },
+                {
+                    "name": "molObj",
+                    "description": "The actual object that will be displayed.",
+                    "type": "THREE.Object3D"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 606,
+            "description": "Draws a cylinder between two points",
+            "itemtype": "method",
+            "name": "cylinderBetweenPoints",
+            "params": [
+                {
+                    "name": "vstart",
+                    "description": "A 3 dimensional vector of the beginning of the cylinder",
+                    "type": "THREE.Vector3"
+                },
+                {
+                    "name": "vend",
+                    "description": "A 3 dimensional vector of the end of the cylinder",
+                    "type": "THREE.Vector3"
+                }
+            ],
+            "return": {
+                "description": "A mesh of the cylinder that will be added the object",
+                "type": "THREE.Mesh"
+            },
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 640,
+            "description": "Parses a file and will update object with the corresponding atoms",
+            "itemtype": "method",
+            "name": "parseDataToAtoms",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "The raw data from the file",
+                    "type": "jQuery.PlainObject"
+                },
+                {
+                    "name": "object",
+                    "description": "The object that will be filled with the data",
+                    "type": "THREE.Object3D"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 675,
+            "description": "Starts the chain of function calls that loads the data of a file into an object",
+            "itemtype": "method",
+            "name": "drawObject",
+            "params": [
+                {
+                    "name": "filename",
+                    "description": "The path to the file with the data.",
+                    "type": "String"
+                },
+                {
+                    "name": "object",
+                    "description": "The object that will be filled with data",
+                    "type": "THREE.Object#d"
+                },
+                {
+                    "name": "isLeft",
+                    "description": "If true, 'object' is the left object. If false, 'object' is the right object.",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 724,
+            "description": "Initializes the error labels",
+            "itemtype": "method",
+            "name": "initErrors",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 834,
+            "description": "Initializes the Leap Motion Controller",
+            "itemtype": "method",
+            "name": "initLeap",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 846,
+            "description": "The main rendering function. It also hands input from the Leap Motion Controller.",
+            "itemtype": "method",
+            "name": "render",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 958,
+            "description": "Given the name of a file in a folder, it returns the original index of that file.",
+            "itemtype": "method",
+            "name": "getIndex",
+            "params": [
+                {
+                    "name": "string",
+                    "description": "The name of the file.",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "The position of the file relative to the parent folder.",
+                "type": "Int"
+            },
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 976,
+            "description": "The function that calls the render function.",
+            "itemtype": "method",
+            "name": "animate",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
+        },
+        {
+            "file": "oculus_leap_visualization.js",
+            "line": 989,
+            "description": "Adds ability of the left and right objects to rotate and  starts the renderer.",
+            "itemtype": "method",
+            "name": "leapLoop",
+            "class": "Oculus-Leap-Visualization",
+            "module": "Oculus-Leap-Visualization"
         }
     ],
     "warnings": [
@@ -39,8 +420,8 @@
             "line": " lib\\RiftCamera.js:1"
         },
         {
-            "message": "Missing item type\ndemo.js\nImplementation of 3D immersion mode for the CTIANP project.",
-            "line": " demo.js:1"
+            "message": "Missing item type\noculus_leap_visualization.js\nImplementation of 3D immersion mode for the CTIANP project with Oculus Rift and LeapMotion controller",
+            "line": " oculus_leap_visualization.js:1"
         }
     ]
 }
