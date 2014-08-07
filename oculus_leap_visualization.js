@@ -79,15 +79,15 @@ var listOfFolders=[], listOfFilesInFolder=[];
  */
 window.onload = function() {
 	
-	//ajaxRequestSimMatrix("data/0x1");
+	ajaxRequestSimMatrix("data/0x1");
 	
-	init();
+	/*init();
 	initLeap();
 	initErrors();
 	initOculus();
 	leapLoop();
 	var dir = "data"
-	ajaxRequestFolders(dir);
+	ajaxRequestFolders(dir);*/
 
 	
 }
