@@ -74,7 +74,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 96,
+            "line": 94,
             "description": "Constructor for the menu.",
             "itemtype": "method",
             "name": "menu",
@@ -83,7 +83,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 128,
+            "line": 154,
             "description": "Sends an AJAX request for the list of files a given folder.",
             "itemtype": "method",
             "name": "ajaxRequestFiles",
@@ -99,7 +99,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 166,
+            "line": 202,
             "description": "Sends an AJAX request for the list of folders in the fort.300_parsed folder.",
             "itemtype": "method",
             "name": "ajaxRequestFolders",
@@ -115,7 +115,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 194,
+            "line": 230,
             "description": "Resets the position and rotation of both molecules to their original location.",
             "itemtype": "method",
             "name": "resetMoleculePos",
@@ -124,7 +124,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 214,
+            "line": 250,
             "description": "Initializes the menu.",
             "itemtype": "method",
             "name": "initMenu",
@@ -133,7 +133,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 366,
+            "line": 272,
             "description": "Initializes the three.js variables, fps counter, left/right objects and left/right labels.",
             "itemtype": "method",
             "name": "init",
@@ -146,7 +146,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 421,
+            "line": 327,
             "description": "Creates a connection using the Oculus Bridge software from https://github.com/Instrument/oculus-bridge",
             "itemtype": "method",
             "name": "initOculus",
@@ -155,7 +155,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 445,
+            "line": 351,
             "description": "Centers the rendering area in the browser. Called when the window is resized.",
             "itemtype": "method",
             "name": "onResize",
@@ -164,7 +164,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 456,
+            "line": 362,
             "description": "Updates the Oculus Rift's configuration.",
             "itemtype": "method",
             "name": "bridgeConfigUpdated",
@@ -180,7 +180,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 469,
+            "line": 375,
             "description": "Updates the Oculus Rift when the orientation is changed.",
             "itemtype": "method",
             "name": "bridgeOrientationUpdated",
@@ -196,7 +196,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 501,
+            "line": 407,
             "description": "Rotates the object around the axis (in world coordinates) by a certain amount of radians",
             "itemtype": "method",
             "name": "rotateAroundWorldAxis",
@@ -222,7 +222,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 521,
+            "line": 427,
             "description": "Returns the average position of the atoms for a given molecule file.",
             "itemtype": "method",
             "name": "avgPos",
@@ -247,7 +247,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 546,
+            "line": 452,
             "description": "Draws the molecule to the scene",
             "itemtype": "method",
             "name": "drawMolecule",
@@ -278,7 +278,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 606,
+            "line": 512,
             "description": "Draws a cylinder between two points",
             "itemtype": "method",
             "name": "cylinderBetweenPoints",
@@ -303,7 +303,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 640,
+            "line": 546,
             "description": "Parses a file and will update object with the corresponding atoms",
             "itemtype": "method",
             "name": "parseDataToAtoms",
@@ -324,7 +324,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 675,
+            "line": 581,
             "description": "Starts the chain of function calls that loads the data of a file into an object",
             "itemtype": "method",
             "name": "drawObject",
@@ -350,7 +350,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 724,
+            "line": 630,
             "description": "Initializes the error labels",
             "itemtype": "method",
             "name": "initErrors",
@@ -359,7 +359,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 834,
+            "line": 740,
             "description": "Initializes the Leap Motion Controller",
             "itemtype": "method",
             "name": "initLeap",
@@ -368,7 +368,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 846,
+            "line": 752,
             "description": "The main rendering function. It also hands input from the Leap Motion Controller.",
             "itemtype": "method",
             "name": "render",
@@ -377,7 +377,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 958,
+            "line": 864,
             "description": "Given the name of a file in a folder, it returns the original index of that file.",
             "itemtype": "method",
             "name": "getIndex",
@@ -397,7 +397,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 976,
+            "line": 882,
             "description": "The function that calls the render function.",
             "itemtype": "method",
             "name": "animate",
@@ -406,7 +406,7 @@
         },
         {
             "file": "oculus_leap_visualization.js",
-            "line": 989,
+            "line": 895,
             "description": "Adds ability of the left and right objects to rotate and  starts the renderer.",
             "itemtype": "method",
             "name": "leapLoop",
