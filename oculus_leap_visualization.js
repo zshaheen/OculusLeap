@@ -79,15 +79,13 @@ var listOfFolders=[], listOfFilesInFolder=[];
  */
 window.onload = function() {
 	
-	ajaxRequestSimMatrix("data/0x1");
 	
-	/*init();
+	init();
 	initLeap();
 	initErrors();
 	initOculus();
 	leapLoop();
-	var dir = "data"
-	ajaxRequestFolders(dir);*/
+	ajaxRequestFolders("data");
 
 	
 }
@@ -105,6 +103,21 @@ function menu() {
 }
 
 
+/*function ajaxRequestFile(dir) {
+	$.ajax({
+
+		type: "POST",
+		url: "getFile.php?dir=" + dir ,
+		dataType: "json",
+		success: function(data) {
+			objRawData = data.split("\n");
+			console.log(objRawData);
+		}
+
+
+	});
+}
+*/
 
 
 function ajaxRequestSimMatrix(dir) {
@@ -117,7 +130,20 @@ function ajaxRequestSimMatrix(dir) {
 
 		success: function(data) {
 
-			console.log(data);
+
+			//console.log(data);
+			simMatrix = data;
+			fileName1 = prefix + listFiles[simMatrixRow];
+			fileName2 = prefix + listFiles[ simMatrix[simMatrixRow][simMatrixCol] ];
+			
+			//The left label is always initially 0
+			drawLabels(0, getIndex(listFiles[simMatrix[0][1]]), listFiles.length-1 ,fileName1, fileName2, "right");
+			
+			console.log("fileName1_draw: " + fileName1);
+			console.log("fileName2_draw: " + fileName2);
+
+			drawObject(fileName1, leftObj, true);
+			drawObject(fileName2, rightObj, false);
 
 		}
 
@@ -141,21 +167,31 @@ function ajaxRequestFiles(dir) {
 		success: function(data) {
 
 			listOfFilesInFolder = data.split("NF");
-			//delete the last index which is just ""
-			listOfFilesInFolder.splice(listOfFilesInFolder.length-1, 1);
+			//remove the last 2 indicies  which is just "" and "simmatrix.json"
+			listOfFilesInFolder.splice(listOfFilesInFolder.length-2, 2);
+			//Remove the last index of listOfFilesInFolder because it's 
+			//listOfFilesInFolder
+			
 			console.log(listOfFilesInFolder);
 
 
 			rightLabel.visible = false;
 			leftLabel.visible = false;
-			simMatrix = [];
-			objRawData = [];
+			//simMatrix = [];
+			//objRawData = [];
 			listFiles = [];
+			
 			lastHand="right";
+			
 			simMatrixRow = 0; 
 			simMatrixCol = 1;
+			
 			resetMoleculePos();
-			simReadData();
+			console.log(prefix);
+
+			listFiles = listOfFilesInFolder;
+			ajaxRequestSimMatrix(prefix);
+			
 		}
 
 	});
@@ -231,136 +267,6 @@ function initMenu() {
 	gui.add(menu, 'explode').name("Reset position");
 }
 
-
-
-function simReadData() {
-
-	var comdata = [];
-	var tempData, line;
-
-	
-	listFiles = listOfFilesInFolder;
-	console.log	
-
-
-	for(var i=0; i<listFiles.length; i++) {
-	
-		var get = $.get(prefix+listFiles[i], function(data) {
-			// split the data by line
-			tempData = data.split("\n");
-			line = tempData[0].split(" ");
-			
-			comdata.push( [line[1], line[2], line[3]] );
-		});
-
-	}
-	
-	get.success(function() {
-
-		simCreateMatrix(comdata, listFiles.length);
-
-		//set fileName1 and fileName2
-		fileName1 = prefix + listFiles[simMatrixRow];
-		fileName2 = prefix + listFiles[ simMatrix[simMatrixRow].sortIndices[simMatrixCol] ];
-		
-		//The left label is always intially 0
-		drawLabels(0, getIndex(listFiles[simMatrix[0].sortIndices[1]]), listFiles.length-1 ,fileName1, fileName2, "right");
-		
-		console.log("fileName1_draw: " + fileName1);
-		console.log("fileName2_draw: " + fileName2);
-
-		drawObject(fileName1, leftObj, true);
-		drawObject(fileName2, rightObj, false);
-
-	});
-}
-
-
-
-
-
-function simCreateMatrix(comdata, size) {
-
-	//Make simMatrix a  2d array
-	simMatrix = [];
-	var temp1dArray;// = [];
-	
-	
-	for(var i=0; i<size; i++) {
-		temp1dArray = [];
-		
-		for(var j=0; j<size; j++) {
-			//console.log( i.toString() + j.toString() );
-			temp1dArray.push(euclideanDistance(comdata[i], comdata[j]));
-		}
-		simMatrix.push(temp1dArray);
-	}
-	
-	//display the raw euclidean distances in simMatrix
-	/*
-	for(var i=0; i<size; i++) {
-		for(var j=0; j<size; j++) {
-			//if(i == 0)
-				//console.log(comdata[i] + " & " + comdata[j]);
-			console.log( i + ", " + j + ": " + simMatrix[i][j] );
-		}
-	}
-	*/
-	
-	
-	//now sort the arrays based on size, 
-	/* Looking in folder 0x1
-	*	simMatrix[0]: [0, 0.644709229603982, 0.41076734188039493, 0.20185418833198668, 
-	*					0.18053564755757986, 0.42409442817103027, 0.6005851074860239]
-	*
-	*	after calling sortWithIndeces(simMatrix[0]), simMatrix[0] is now ordered: 
-	*				[0, 0.18053564755757986, 0.20185418833198668, 0.41076734188039493, 
-	*					0.42409442817103027, 0.6005851074860239, 0.644709229603982]
-	*
-	*	simMatrix[0].sortIndices is [0, 4, 3, 2, 5, 6, 1] 
-	*	meaning that the files in listFiles[4] is the most similar (other than the files itself), 
-	*/
-	
-	for(var i=0; i<size; i++) {
-		
-		sortWithIndeces(simMatrix[i]);
-		console.log(simMatrix[i].sortIndices);
-
-	}
-	
-}
-
-
-
-function sortWithIndeces(toSort) {
-
-	//code taken from http://stackoverflow.com/questions/3730510/javascript-sort-array-and-return-an-array-of-indicies-that-indicates-the-positi
-	for (var i = 0; i < toSort.length; i++) {
-		toSort[i] = [toSort[i], i];
-	}
-	
-	toSort.sort(function(left, right) {
-		return left[0] < right[0] ? -1 : 1;
-	});
-	
-	toSort.sortIndices = [];
-	for (var j = 0; j < toSort.length; j++) {
-		toSort.sortIndices.push(toSort[j][1]);
-		toSort[j] = toSort[j][0];
-	}
-	return toSort;
-
-}
-
-
-
-function euclideanDistance(v1, v2) {
-
-	return Math.sqrt( ((v1[0]-v2[0])*(v1[0]-v2[0])) 
-		+  ((v1[1]-v2[1])*(v1[1]-v2[1])) 
-		+  ((v1[2]-v2[2])*(v1[2]-v2[2])) );
-	
-}
 
 
 /**
@@ -880,7 +786,7 @@ function render() {
 				if(rightObj.position.z < -150 ) {
 					
 					if(lastHand == "left") {
-						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
+						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow][simMatrixCol]]);
 						simMatrixCol = 0;
 					}
 					lastHand = "right";
@@ -889,7 +795,7 @@ function render() {
 					if(simMatrixCol == listFiles.length) 
 						simMatrixCol = 1;
 
-					fileName2 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
+					fileName2 = prefix + listFiles[simMatrix[simMatrixRow][simMatrixCol]];
 					console.log("filename1 " + fileName1);
 					console.log("filename2 " + fileName2);
 					drawObject(fileName2, rightObj, false);
@@ -917,7 +823,7 @@ function render() {
 				if(leftObj.position.z < -150 ) {
 					
 					if(lastHand == "right") {
-						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]]);
+						simMatrixRow = getIndex(listFiles[simMatrix[simMatrixRow][simMatrixCol]]);
 						simMatrixCol = 0;
 					}
 					lastHand = "left";
@@ -926,7 +832,7 @@ function render() {
 					if(simMatrixCol == listFiles.length) 
 						simMatrixCol = 1;
 
-					fileName1 = prefix + listFiles[simMatrix[simMatrixRow].sortIndices[simMatrixCol]];
+					fileName1 = prefix + listFiles[simMatrix[simMatrixRow][simMatrixCol]];
 					console.log("filename1 " + fileName1);
 					console.log("filename2 " + fileName2);
 					drawObject(fileName1, leftObj, true);
